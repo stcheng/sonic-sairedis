@@ -7,6 +7,7 @@
 #include <hiredis/hiredis.h>
 #include "swss/dbconnector.h"
 #include "swss/table.h"
+#include "swss/logger.h"
 #include "sai.h"
 #include "saiserialize.h"
 #include "string.h"

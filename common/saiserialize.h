@@ -12,21 +12,9 @@
 #include <map>
 #include <tuple>
 #include <string.h>
+#include "swss/logger.h"
 
 #define TO_STR(x) #x
-
-#define SERIALIZE_LOG(level, fmt, arg ...) {\
-    fprintf(stderr, "%d: ", level); \
-    fprintf(stderr, fmt, ##arg); \
-    fprintf(stderr, "\n"); }
-
-#define SERIALIZE_LOG_ENTER()   SERIALIZE_LOG(SAI_LOG_DEBUG, "%s: >", __FUNCTION__)
-#define SERIALIZE_LOG_EXIT()    SERIALIZE_LOG(SAI_LOG_DEBUG, "%s: <", __FUNCTION__)
-#define SERIALIZE_LOG_DBG(fmt, arg ...) SERIALIZE_LOG(SAI_LOG_DEBUG, fmt, ##arg)
-#define SERIALIZE_LOG_INF(fmt, arg ...) SERIALIZE_LOG(SAI_LOG_INFO, fmt, ##arg)
-#define SERIALIZE_LOG_WRN(fmt, arg ...) SERIALIZE_LOG(SAI_LOG_WARN, fmt, ##arg)
-#define SERIALIZE_LOG_ERR(fmt, arg ...) SERIALIZE_LOG(SAI_LOG_ERROR, fmt, ##arg)
-#define SERIALIZE_LOG_NTC(fmt, arg ...) SERIALIZE_LOG(SAI_LOG_NOTICE, fmt, ##arg)
 
 typedef enum _sai_attr_serialization_type_t 
 {

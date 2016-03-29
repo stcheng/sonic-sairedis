@@ -13,8 +13,7 @@ swss::ProducerTable   *g_redisGetProducer = NULL;
 swss::ConsumerTable   *g_redisGetConsumer = NULL;
 swss::ConsumerTable   *g_redisNotifications = NULL;
 
-swss::Table           *g_vidToRid = NULL;
-swss::Table           *g_ridToVid = NULL;
+swss::RedisClient     *g_redisClient = NULL;
 
 sai_status_t sai_api_initialize(
         _In_ uint64_t flags,
@@ -59,14 +58,10 @@ sai_status_t sai_api_initialize(
 
     g_redisNotifications = new swss::ConsumerTable(g_db, "NOTIFICATIONS");
 
-    if (g_vidToRid != NULL)
-        delete g_vidToRid;
+    if (g_redisClient != NULL)
+        delete g_redisClient;
 
-    if (g_ridToVid != NULL)
-        delete g_ridToVid;
-
-    g_vidToRid = new swss::Table(g_db, "VIDTORID");
-    g_ridToVid = new swss::Table(g_db, "RIDTOVID");
+    g_redisClient = new swss::RedisClient(g_db);
 
     g_initialized = true;
 

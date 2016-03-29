@@ -12,8 +12,11 @@ SaiAttributeList::SaiAttributeList(
         const std::string &str_attr_id = fvField(values[i]);
         const std::string &str_attr_value = fvValue(values[i]);
 
+        if (str_attr_id == "NULL")
+            continue;
+
         sai_attribute_t attr;
-        memset(&attr, 1, sizeof(sai_attribute_t));
+        memset(&attr, 0, sizeof(sai_attribute_t));
 
         int index = 0;
         sai_deserialize_primitive(str_attr_id, index, attr.id);

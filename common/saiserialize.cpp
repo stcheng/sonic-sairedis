@@ -5,6 +5,8 @@ sai_object_type_to_string_map_t g_object_type_map = sai_get_object_type_map();
 
 sai_serialization_map_t sai_get_serialization_map()
 {
+    SWSS_LOG_ENTER();
+
     sai_serialization_map_t map;
 
     map[SAI_OBJECT_TYPE_ACL_TABLE][SAI_ACL_TABLE_ATTR_PRIORITY] = SAI_SERIALIZATION_TYPE_UINT32;
@@ -27,7 +29,7 @@ sai_serialization_map_t sai_get_serialization_map()
     map[SAI_OBJECT_TYPE_ROUTER_INTERFACE][SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID] = SAI_SERIALIZATION_TYPE_OBJECT_ID;
     map[SAI_OBJECT_TYPE_ROUTER_INTERFACE][SAI_ROUTER_INTERFACE_ATTR_TYPE] = SAI_SERIALIZATION_TYPE_INT32;
     map[SAI_OBJECT_TYPE_ROUTER_INTERFACE][SAI_ROUTER_INTERFACE_ATTR_SRC_MAC_ADDRESS] = SAI_SERIALIZATION_TYPE_MAC;
-    map[SAI_OBJECT_TYPE_ROUTER_INTERFACE][SAI_ROUTER_INTERFACE_ATTR_VLAN_ID] = SAI_SERIALIZATION_TYPE_MAC;
+    map[SAI_OBJECT_TYPE_ROUTER_INTERFACE][SAI_ROUTER_INTERFACE_ATTR_VLAN_ID] = SAI_SERIALIZATION_TYPE_UINT16;
 
     map[SAI_OBJECT_TYPE_HOST_INTERFACE][SAI_HOSTIF_ATTR_TYPE] = SAI_SERIALIZATION_TYPE_INT32;
     map[SAI_OBJECT_TYPE_HOST_INTERFACE][SAI_HOSTIF_ATTR_RIF_OR_PORT_ID] = SAI_SERIALIZATION_TYPE_OBJECT_ID;
@@ -49,6 +51,7 @@ sai_serialization_map_t sai_get_serialization_map()
     map[SAI_OBJECT_TYPE_SWITCH][SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID] = SAI_SERIALIZATION_TYPE_OBJECT_ID;
 
     map[SAI_OBJECT_TYPE_FDB][SAI_FDB_ENTRY_ATTR_TYPE] = SAI_SERIALIZATION_TYPE_INT32;
+    map[SAI_OBJECT_TYPE_FDB][SAI_FDB_ENTRY_ATTR_PORT_ID] = SAI_SERIALIZATION_TYPE_OBJECT_ID;
 
     map[SAI_OBJECT_TYPE_VLAN][SAI_VLAN_ATTR_MAX_LEARNED_ADDRESSES] = SAI_SERIALIZATION_TYPE_UINT32;
 
@@ -62,6 +65,8 @@ sai_serialization_map_t sai_get_serialization_map()
 
 sai_object_type_to_string_map_t sai_get_object_type_map()
 {
+    SWSS_LOG_ENTER();
+
     sai_object_type_to_string_map_t map;
 
     map[SAI_OBJECT_TYPE_NULL] = TO_STR(SAI_OBJECT_TYPE_NULL);
@@ -111,7 +116,8 @@ sai_status_t sai_get_object_type_string(sai_object_type_t object_type, std::stri
 
     if (it == g_object_type_map.end())
     {
-        fprintf(stderr, "serialization object not found type not found");
+        SWSS_LOG_ERROR("serialization object not found %x", object_type);
+
         return SAI_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -129,7 +135,8 @@ sai_status_t sai_get_serialization_type(
 
     if (it == g_serialization_map.end())
     {
-        fprintf(stderr, "serialization object not found type not found");
+        SWSS_LOG_ERROR("serialization object not found %x", object_type);
+
         return SAI_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -139,7 +146,8 @@ sai_status_t sai_get_serialization_type(
 
     if (mit == map.end())
     {
-        fprintf(stderr, "serialization attribute not found");
+        SWSS_LOG_ERROR("serialization attribute id not found %u", attr_id);
+
         return SAI_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -482,10 +490,9 @@ int char_to_int(
     if (c >= 'a' && c <= 'f')
         return c - 'a' + 10;
 
-    std::stringstream ss;
-    ss << "Unable to convert char '" << c << "' (" << (int)c << ") to int";
+    SWSS_LOG_ERROR("Unable to convert char %d to int", c);
 
-    throw ss.str();
+    exit(EXIT_FAILURE);
 }
 
 sai_status_t sai_deserialize_attr_value(
@@ -937,7 +944,7 @@ sai_status_t sai_serialize_fdb_event_notification_data(
         _In_ sai_fdb_event_notification_data_t *fdb,
         _Out_ std::string &s)
 {
-    SERIALIZE_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_serialize_primitive(fdb->event_type, s);
     sai_serialize_primitive(fdb->fdb_entry, s);
@@ -947,35 +954,33 @@ sai_status_t sai_serialize_fdb_event_notification_data(
     {
         const sai_attribute_t *attr = &fdb->attr[i];
 
+        sai_serialize_primitive(attr->id, s);
+
         sai_attr_serialization_type_t serialization_type;
         sai_status_t status = sai_get_serialization_type(SAI_OBJECT_TYPE_FDB, attr->id, serialization_type);
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            SERIALIZE_LOG_ERR("Unable to find serialization type for object type: %u and attribute id: %u, status: %u",
+            SWSS_LOG_ERROR("Unable to find serialization type for object type: %x and attribute id: %u, status: %u",
                     SAI_OBJECT_TYPE_FDB,
                     attr->id,
                     status);
 
-            SERIALIZE_LOG_EXIT();
-            return status;
+            exit(EXIT_FAILURE);
         }
 
         status = sai_serialize_attr_value(serialization_type, *attr, s, false);
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            SERIALIZE_LOG_ERR("Unable to serialize attribute for object type: %u and attribute id: %u, status: %u",
+            SWSS_LOG_ERROR("Unable to serialize attribute for object type: %x and attribute id: %u, status: %u",
                 SAI_OBJECT_TYPE_FDB,
                 attr->id,
                 status);
 
-            SERIALIZE_LOG_EXIT();
-            return status;
+            exit(EXIT_FAILURE);
         }
     }
-
-    SERIALIZE_LOG_EXIT();
 
     return SAI_STATUS_SUCCESS;
 }
@@ -985,6 +990,8 @@ sai_status_t sai_deserialize_fdb_event_notification_data(
         _In_ int index,
         _Out_ sai_fdb_event_notification_data_t *fdb)
 {
+    SWSS_LOG_ENTER();
+
     sai_deserialize_primitive(s, index, fdb->event_type);
     sai_deserialize_primitive(s, index, fdb->fdb_entry);
     sai_deserialize_primitive(s, index, fdb->attr_count);
@@ -995,17 +1002,18 @@ sai_status_t sai_deserialize_fdb_event_notification_data(
     {
         sai_attribute_t *attr = &fdb->attr[i];
 
+        sai_deserialize_primitive(s, index, attr->id);
+
         sai_attr_serialization_type_t serialization_type;
         sai_status_t status = sai_get_serialization_type(SAI_OBJECT_TYPE_FDB, attr->id, serialization_type);
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            SERIALIZE_LOG_ERR("Unable to find serialization type for object type: %u and attribute id: %u, status: %u",
+            SWSS_LOG_ERROR("Unable to find serialization type for object type: %x and attribute id: %u, status: %u",
                     SAI_OBJECT_TYPE_FDB,
                     attr->id,
                     status);
 
-            SERIALIZE_LOG_EXIT();
             return status;
         }
 
@@ -1013,12 +1021,11 @@ sai_status_t sai_deserialize_fdb_event_notification_data(
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            SERIALIZE_LOG_ERR("Unable to deserialize attribute for object type: %u and attribute id: %u, status: %u",
+            SWSS_LOG_ERROR("Unable to deserialize attribute for object type: %x and attribute id: %u, status: %u",
                 SAI_OBJECT_TYPE_FDB,
                 attr->id,
                 status);
 
-            SERIALIZE_LOG_EXIT();
             return status;
         }
     }
@@ -1029,7 +1036,7 @@ sai_status_t sai_deserialize_fdb_event_notification_data(
 sai_status_t sai_deserialize_free_fdb_event_notification_data(
         _In_ sai_fdb_event_notification_data_t *fdb)
 {
-    SERIALIZE_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     // NOTE: on any failure we have memory leak since we don't
     // know which serialization type was used, we dont know what
@@ -1044,12 +1051,11 @@ sai_status_t sai_deserialize_free_fdb_event_notification_data(
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            SERIALIZE_LOG_ERR("Unable to find serialization type for object type: %u and attribute id: %u, status: %u",
+            SWSS_LOG_ERROR("Unable to find serialization type for object type: %x and attribute id: %u, status: %u",
                     SAI_OBJECT_TYPE_FDB,
                     attr->id,
                     status);
 
-            SERIALIZE_LOG_EXIT();
             return status;
         }
 
@@ -1057,19 +1063,16 @@ sai_status_t sai_deserialize_free_fdb_event_notification_data(
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            SERIALIZE_LOG_ERR("Unable to free attribute for object type: %u and attribute id: %u, status: %u",
+            SWSS_LOG_ERROR("Unable to free attribute for object type: %x and attribute id: %u, status: %u",
                 SAI_OBJECT_TYPE_FDB,
                 attr->id,
                 status);
 
-            SERIALIZE_LOG_EXIT();
             return status;
         }
     }
 
     sai_dealloc_array(fdb->attr);
-
-    SERIALIZE_LOG_EXIT();
 
     return SAI_STATUS_SUCCESS;
 }
@@ -1347,7 +1350,14 @@ void transfer_attributes(
         sai_status_t status = sai_get_serialization_type(object_type, src_attr.id, serialization_type);
 
         if (status != SAI_STATUS_SUCCESS)
-            throw std::runtime_error("unable to find serialization type");
+        {
+            SWSS_LOG_ERROR("Unable to find serialization type object type: %x and attribute id: %u, status: %u",
+                SAI_OBJECT_TYPE_FDB,
+                src_attr.id,
+                status);
+
+            exit(EXIT_FAILURE);
+        }
 
         transfer_attribute(serialization_type, src_attr, dst_attr, countOnly);
     }

@@ -4,7 +4,12 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
+#include <mutex>
+
 #include <unistd.h>
+#include <execinfo.h>
+#include <signal.h>
 
 #include "string.h"
 extern "C" {
@@ -20,30 +25,44 @@ extern "C" {
 #include "swss/scheme.h"
 #include "swss/logger.h"
 #include "swss/table.h"
+#include "swss/redisclient.h"
 
 #define UNREFERENCED_PARAMETER(X)
 
-#define SYNCD_LOG_ERR(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_ERROR, MSG, ##__VA_ARGS__)
-#define SYNCD_LOG_WRN(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_WARN, MSG, ##__VA_ARGS__)
-#define SYNCD_LOG_NTC(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_NOTICE, MSG, ##__VA_ARGS__)
-#define SYNCD_LOG_INF(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_INFO, MSG, ##__VA_ARGS__)
-#define SYNCD_LOG_DBG(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_DEBUG, MSG, ##__VA_ARGS__)
-#define SYNCD_LOG_ENTER()   		SYNCD_LOG_DBG("%s: >", __FUNCTION__)
-#define SYNCD_LOG_EXIT()    		SYNCD_LOG_DBG("%s: <", __FUNCTION__)
+#define VIDTORID                    "VIDTORID"
+#define RIDTOVID                    "RIDTOVID"
+#define VIDCOUNTER                  "VIDCOUNTER"
+#define LANES                       "LANES"
+#define HIDDEN                      "HIDDEN"
+#define DEFAULT_VIRTUAL_ROUTER_ID   "DEFAULT_VIRTUAL_ROUTER_ID"
+#define CPU_PORT_ID                 "CPU_PORT_ID"
+
+extern std::mutex g_mutex;
+
+void onSyncdStart();
+void hardReinit();
 
 sai_object_id_t replaceVidToRid(const sai_object_id_t &virtual_object_id);
+std::unordered_map<sai_object_id_t, sai_object_id_t> redisGetVidToRidMap();
+std::unordered_map<sai_object_id_t, sai_object_id_t> redisGetRidToVidMap();
+std::vector<std::string> redisGetAsicStateKeys();
+sai_object_id_t redisGetDefaultVirtualRouterId();
+void redisClearVidToRidMap();
+void redisClearRidToVidMap();
 
 extern swss::ConsumerTable *getRequest;
 extern swss::ProducerTable *getResponse;
 extern swss::ProducerTable *notifications;
 
-extern swss::Table *g_vidToRid;
-extern swss::Table *g_ridToVid;
+extern swss::RedisClient   *g_redisClient;
+
+sai_object_id_t redis_create_virtual_object_id(
+        _In_ sai_object_type_t object_type);
 
 sai_object_id_t translate_vid_to_rid(
         _In_ sai_object_id_t vid);
 
-void translate_vid_to_rid(
+void translate_vid_to_rid_list(
         _In_ sai_object_type_t object_type,
         _In_ uint32_t attr_count,
         _In_ sai_attribute_t *attr_list);
@@ -57,6 +76,14 @@ void translate_list_vid_to_rid(
         element.list[i] = translate_vid_to_rid(element.list[i]);
     }
 }
+
+sai_object_id_t translate_rid_to_vid(
+        _In_ sai_object_id_t rid);
+
+void translate_rid_to_vid_list(
+        _In_ sai_object_type_t object_type,
+        _In_ uint32_t attr_count,
+        _In_ sai_attribute_t *attr_list);
 
 typedef sai_status_t (*create_fn)(
         _Out_ sai_object_id_t *stp_id,
@@ -108,7 +135,7 @@ extern sai_wred_api_t               *sai_wred_api;
 
 extern sai_switch_notification_t switch_notifications;
 
-extern swss::Table *vidToRid;
+extern swss::DBConnector *db;
 
 void initialize_common_api_pointers();
 void populate_sai_apis();

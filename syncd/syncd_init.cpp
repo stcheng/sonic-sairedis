@@ -33,6 +33,8 @@ sai_wred_api_t               *sai_wred_api;
 
 void initialize_common_api_pointers()
 {
+    SWSS_LOG_ENTER();
+
     common_create[SAI_OBJECT_TYPE_NULL] = NULL;
     common_create[SAI_OBJECT_TYPE_PORT] = NULL;
     common_create[SAI_OBJECT_TYPE_LAG] = sai_lag_api->create_lag;
@@ -164,6 +166,8 @@ void initialize_common_api_pointers()
 
 void populate_sai_apis()
 {
+    SWSS_LOG_ENTER();
+
     sai_api_query(SAI_API_ACL, (void**)&sai_acl_api);
     sai_api_query(SAI_API_BUFFERS, (void**)&sai_buffer_api);
     sai_api_query(SAI_API_FDB, (void**)&sai_fdb_api);

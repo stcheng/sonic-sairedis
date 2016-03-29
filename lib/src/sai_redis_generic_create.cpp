@@ -1,7 +1,5 @@
 #include "sai_redis.h"
 
-uint64_t object_id_counter = 0;
-
 sai_object_id_t redis_create_virtual_object_id(
         _In_ sai_object_type_t object_type)
 {
@@ -16,10 +14,8 @@ sai_object_id_t redis_create_virtual_object_id(
     // in future we could change this to find "holes" after delted
     // objects, but can be tricky since this information would need
     // to be stored somewhere in case of oa restart
-    //
-    // TODO make this atomic
 
-    uint64_t virtual_id = object_id_counter++;
+    uint64_t virtual_id = g_redisClient->incr("VIDCOUNTER");
 
     return (((sai_object_id_t)object_type) << 48) | virtual_id;
 }
@@ -50,6 +46,15 @@ sai_status_t internal_redis_generic_create(
             attr_count, 
             attr_list,
             false);
+
+    if (entry.size() == 0)
+    {
+        // make sure that we put object into db
+        // even if there are no attributes set
+        swss::FieldValueTuple null("NULL", "NULL");
+
+        entry.push_back(null);
+    }
 
     std::string str_object_type;
 

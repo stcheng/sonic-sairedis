@@ -11,6 +11,8 @@ endif
 
 syncd_SOURCES = syncd.cpp \
 		syncd_init.cpp \
+		syncd_reinit.cpp \
+		syncd_hard_reinit.cpp \
 		syncd_notifications.cpp \
 		../common/saiserialize.cpp \
 		../common/saiattributelist.cpp
