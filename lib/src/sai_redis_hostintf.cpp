@@ -26,9 +26,7 @@ sai_status_t redis_recv_packet(
         _Inout_ uint32_t *attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -55,9 +53,7 @@ sai_status_t redis_send_packet(
         _In_ uint32_t attr_count,
         _In_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -78,14 +74,12 @@ sai_status_t redis_set_user_defined_trap_attribute(
     _In_ sai_hostif_user_defined_trap_id_t hostif_user_defined_trapid,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_TRAP_USER_DEF,
             hostif_user_defined_trapid,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -108,15 +102,13 @@ sai_status_t redis_get_user_defined_trap_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_TRAP_USER_DEF,
             hostif_user_defined_trapid,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -139,15 +131,13 @@ sai_status_t redis_create_hostif_trap_group(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_TRAP_GROUP,
             hostif_trap_group_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -167,13 +157,11 @@ sai_status_t redis_create_hostif_trap_group(
 sai_status_t redis_remove_hostif_trap_group(
     _In_ sai_object_id_t hostif_trap_group_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_TRAP_GROUP,
             hostif_trap_group_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -195,14 +183,12 @@ sai_status_t  redis_set_trap_group_attribute
     _In_ sai_object_id_t hostif_trap_group_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_TRAP_GROUP,
             hostif_trap_group_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -226,15 +212,13 @@ sai_status_t redis_get_trap_group_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_TRAP_GROUP,
             hostif_trap_group_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -255,14 +239,12 @@ sai_status_t redis_set_trap_attribute(
     _In_ sai_hostif_trap_id_t hostif_trapid,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_TRAP,
             hostif_trapid,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -285,15 +267,13 @@ sai_status_t redis_get_trap_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_TRAP,
             hostif_trapid,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -316,15 +296,13 @@ sai_status_t redis_create_hostif(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
             hif_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -343,13 +321,11 @@ sai_status_t redis_create_hostif(
 sai_status_t redis_remove_hostif(
     _In_ sai_object_id_t hif_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
             hif_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -370,14 +346,12 @@ sai_status_t redis_set_hostif_attribute(
     _In_ sai_object_id_t hif_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
             hif_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -400,15 +374,13 @@ sai_status_t redis_get_hostif_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
             hif_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -432,9 +404,7 @@ void redis_packet_event_notification(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 }
 
 /**

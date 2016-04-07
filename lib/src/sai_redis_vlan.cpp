@@ -14,13 +14,11 @@
 sai_status_t  redis_create_vlan(
     _In_ sai_vlan_id_t vlan_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create_vlan(
             SAI_OBJECT_TYPE_VLAN,
             vlan_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -39,13 +37,11 @@ sai_status_t  redis_create_vlan(
 sai_status_t redis_remove_vlan(
     _In_ sai_vlan_id_t vlan_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove_vlan(
             SAI_OBJECT_TYPE_VLAN,
             vlan_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -66,14 +62,12 @@ sai_status_t  redis_set_vlan_attribute(
     _In_ sai_vlan_id_t vlan_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set_vlan(
             SAI_OBJECT_TYPE_VLAN,
             vlan_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -96,15 +90,13 @@ sai_status_t  redis_get_vlan_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get_vlan(
             SAI_OBJECT_TYPE_VLAN,
             vlan_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -122,15 +114,13 @@ sai_status_t redis_create_vlan_member(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_VLAN_MEMBER,
             vlan_member_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -144,13 +134,11 @@ sai_status_t redis_create_vlan_member(
 sai_status_t redis_remove_vlan_member(
     _In_ sai_object_id_t vlan_member_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_VLAN_MEMBER,
             vlan_member_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -166,14 +154,12 @@ sai_status_t  redis_set_vlan_member_attribute(
     _In_ sai_object_id_t  vlan_member_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_VLAN_MEMBER,
             vlan_member_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -192,15 +178,13 @@ sai_status_t  redis_get_vlan_member_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_VLAN_MEMBER,
             vlan_member_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -226,9 +210,7 @@ sai_status_t  redis_get_vlan_stats(
     _In_ uint32_t number_of_counters,
     _Out_ uint64_t* counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -251,9 +233,7 @@ sai_status_t  redis_clear_vlan_stats(
     _In_ const sai_vlan_stat_counter_t *counter_ids,
     _In_ uint32_t number_of_counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }

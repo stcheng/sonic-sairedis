@@ -18,15 +18,13 @@ sai_status_t  redis_create_fdb_entry(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_FDB,
             fdb_entry,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -45,13 +43,11 @@ sai_status_t  redis_create_fdb_entry(
 sai_status_t  redis_remove_fdb_entry(
     _In_ const sai_fdb_entry_t* fdb_entry)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_FDB,
             fdb_entry);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -70,14 +66,12 @@ sai_status_t  redis_set_fdb_entry_attribute(
     _In_ const sai_fdb_entry_t* fdb_entry,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_FDB,
             fdb_entry,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -100,15 +94,13 @@ sai_status_t  redis_get_fdb_entry_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_FDB,
             fdb_entry,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -129,9 +121,7 @@ sai_status_t  redis_flush_fdb_entries(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -151,9 +141,7 @@ void  redis_fdb_event_notification(
     _In_ uint32_t count,
     _In_ sai_fdb_event_notification_data_t *data)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 }
 
 /**

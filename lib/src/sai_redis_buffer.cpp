@@ -12,14 +12,12 @@ sai_status_t redis_set_ingress_priority_group_attr(
     _In_ sai_object_id_t ingress_pg_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_PRIORITY_GROUP,
             ingress_pg_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -38,15 +36,13 @@ sai_status_t redis_get_ingress_priority_group_attr(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_PRIORITY_GROUP,
             ingress_pg_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -68,9 +64,7 @@ sai_status_t redis_get_ingress_priority_group_stats(
     _In_ uint32_t number_of_counters,
     _Out_ uint64_t* counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -90,9 +84,7 @@ sai_status_t redis_clear_ingress_priority_group_stats(
     _In_ const sai_ingress_priority_group_stat_counter_t *counter_ids,
     _In_ uint32_t number_of_counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -110,15 +102,13 @@ sai_status_t redis_create_buffer_pool(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
         SAI_OBJECT_TYPE_BUFFER_POOL,
         pool_id,
         attr_count,
         attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -132,13 +122,11 @@ sai_status_t redis_create_buffer_pool(
 sai_status_t redis_remove_buffer_pool(
     _In_ sai_object_id_t pool_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_BUFFER_POOL,
             pool_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -154,14 +142,12 @@ sai_status_t redis_set_buffer_pool_attr(
     _In_ sai_object_id_t pool_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_BUFFER_POOL,
             pool_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -179,15 +165,13 @@ sai_status_t redis_get_buffer_pool_attr(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_BUFFER_POOL,
             pool_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -209,9 +193,7 @@ sai_status_t redis_get_buffer_pool_stats(
     _In_ uint32_t number_of_counters,
     _Out_ uint64_t* counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -229,15 +211,13 @@ sai_status_t redis_create_buffer_profile(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_BUFFER_PROFILE,
             buffer_profile_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -251,13 +231,11 @@ sai_status_t redis_create_buffer_profile(
 sai_status_t redis_remove_buffer_profile(
     _In_ sai_object_id_t buffer_profile_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_BUFFER_PROFILE,
             buffer_profile_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -273,14 +251,12 @@ sai_status_t redis_set_buffer_profile_attr(
     _In_ sai_object_id_t buffer_profile_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_BUFFER_PROFILE,
             buffer_profile_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -298,15 +274,13 @@ sai_status_t redis_get_buffer_profile_attr(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_BUFFER_PROFILE,
             buffer_profile_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }

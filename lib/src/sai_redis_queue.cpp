@@ -12,14 +12,12 @@ sai_status_t  redis_set_queue_attribute(
     _In_ sai_object_id_t queue_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_QUEUE,
             queue_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -38,15 +36,13 @@ sai_status_t  redis_get_queue_attribute(
     _In_ uint32_t        attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_QUEUE,
             queue_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -68,9 +64,7 @@ sai_status_t  redis_get_queue_stats(
     _In_ uint32_t number_of_counters,
     _Out_ uint64_t* counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -90,9 +84,7 @@ sai_status_t  redis_clear_queue_stats(
     _In_ const sai_queue_stat_counter_t *counter_ids,
     _In_ uint32_t number_of_counters)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }

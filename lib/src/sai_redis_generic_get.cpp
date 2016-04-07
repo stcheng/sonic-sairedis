@@ -6,7 +6,7 @@ sai_status_t internal_redis_get_process(
         _Out_ sai_attribute_t *attr_list,
         _In_ swss::KeyOpFieldsValuesTuple &kco)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     // key is: object_type:object_id:sai_status
 
@@ -35,8 +35,6 @@ sai_status_t internal_redis_get_process(
         transfer_attributes(object_type, attr_count, list.get_attr_list(), attr_list, true);
     }
 
-    REDIS_LOG_EXIT();
-
     return status;
 }
 
@@ -59,7 +57,7 @@ sai_status_t internal_redis_generic_get(
         _In_ uint32_t attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     std::vector<swss::FieldValueTuple> entry = SaiAttributeList::serialize_attr_list(
             object_type, 
@@ -73,6 +71,8 @@ sai_status_t internal_redis_generic_get(
 
     std::string key = str_object_type + ":" + serialized_object_id;
 
+    SWSS_LOG_DEBUG("generic get key: %s, fields: %lu", key.c_str(), entry.size());
+
     g_redisGetProducer->set(key, entry, "get");
     g_redisGetProducer->del(key, "delget");
 
@@ -84,6 +84,8 @@ sai_status_t internal_redis_generic_get(
 
     while (true)
     {
+        SWSS_LOG_DEBUG("wait for response");
+
         swss::Selectable *sel;
 
         int fd;
@@ -99,27 +101,27 @@ sai_status_t internal_redis_generic_get(
             const std::string &op = kfvOp(kco); 
             const std::string &key = kfvKey(kco);
 
-            REDIS_LOG_DBG("op = %s, key = %s", op.c_str(), key.c_str());
+            SWSS_LOG_DEBUG("response: %s op = %s, key = %s", key.c_str(), op.c_str());
 
             if (op != "getresponse") // ignore non response messages
                 continue;
 
-            sai_status_t sai_status = internal_redis_get_process(
+            sai_status_t status = internal_redis_get_process(
                     object_type, 
                     attr_count, 
                     attr_list, 
                     kco);
 
-            REDIS_LOG_EXIT();
+            SWSS_LOG_DEBUG("generic get status: %d", status);
 
-            return sai_status;
+            return status;
         }
 
-        REDIS_LOG_ERR("failed to get response for get status: %d", result);
+        SWSS_LOG_ERROR("generic get failed to get response result: %d", result);
         break;
     }
 
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ERROR("generic get failed to get response");
 
     return SAI_STATUS_FAILURE;
 }
@@ -144,7 +146,7 @@ sai_status_t redis_generic_get(
         _In_ uint32_t attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     std::string str_object_id;
     sai_serialize_primitive(object_id, str_object_id);
@@ -155,8 +157,6 @@ sai_status_t redis_generic_get(
             attr_count,
             attr_list);
 
-    REDIS_LOG_EXIT();
-
     return status;
 }
 
@@ -166,7 +166,7 @@ sai_status_t redis_generic_get(
         _In_ uint32_t attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     std::string str_fdb_entry;
     sai_serialize_primitive(*fdb_entry, str_fdb_entry);
@@ -177,8 +177,6 @@ sai_status_t redis_generic_get(
             attr_count,
             attr_list);
 
-    REDIS_LOG_EXIT();
-
     return status;
 }
 
@@ -188,7 +186,7 @@ sai_status_t redis_generic_get(
         _In_ uint32_t attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     std::string str_neighbor_entry;
     sai_serialize_primitive(*neighbor_entry, str_neighbor_entry);
@@ -199,8 +197,6 @@ sai_status_t redis_generic_get(
             attr_count,
             attr_list);
 
-    REDIS_LOG_EXIT();
-
     return status;
 }
 
@@ -210,7 +206,7 @@ sai_status_t redis_generic_get(
         _In_ uint32_t attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     std::string str_route_entry;
     sai_serialize_primitive(*unicast_route_entry, str_route_entry);
@@ -221,8 +217,6 @@ sai_status_t redis_generic_get(
             attr_count,
             attr_list);
 
-    REDIS_LOG_EXIT();
-
     return status;
 }
 
@@ -232,7 +226,7 @@ sai_status_t redis_generic_get_vlan(
         _In_ uint32_t attr_count,
         _Out_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     std::string str_vlan_id;
     sai_serialize_primitive(vlan_id, str_vlan_id);
@@ -242,8 +236,6 @@ sai_status_t redis_generic_get_vlan(
             str_vlan_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }

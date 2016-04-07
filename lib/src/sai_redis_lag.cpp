@@ -14,15 +14,13 @@ sai_status_t redis_create_lag(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_LAG,
             lag_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -36,13 +34,11 @@ sai_status_t redis_create_lag(
 sai_status_t redis_remove_lag(
     _In_ sai_object_id_t lag_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_LAG,
             lag_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -58,14 +54,12 @@ sai_status_t  redis_set_lag_attribute(
     _In_ sai_object_id_t  lag_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_LAG,
             lag_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -84,15 +78,13 @@ sai_status_t  redis_get_lag_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_LAG,
             lag_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -110,15 +102,13 @@ sai_status_t redis_create_lag_member(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_LAG_MEMBER,
             lag_member_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -132,13 +122,11 @@ sai_status_t redis_create_lag_member(
 sai_status_t redis_remove_lag_member(
     _In_ sai_object_id_t lag_member_id)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_LAG_MEMBER,
             lag_member_id);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -154,14 +142,12 @@ sai_status_t  redis_set_lag_member_attribute(
     _In_ sai_object_id_t  lag_member_id,
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_LAG_MEMBER,
             lag_member_id,
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -180,15 +166,13 @@ sai_status_t  redis_get_lag_member_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_LAG_MEMBER,
             lag_member_id,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }

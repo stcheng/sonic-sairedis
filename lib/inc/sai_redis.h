@@ -62,15 +62,6 @@ extern sai_switch_notification_t redis_switch_notifications;
 
 #define UNREFERENCED_PARAMETER(X)
 
-#define REDIS_LOG_ERR(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_ERROR, MSG, ##__VA_ARGS__)
-#define REDIS_LOG_WRN(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_WARN, MSG, ##__VA_ARGS__)
-#define REDIS_LOG_NTC(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_NOTICE, MSG, ##__VA_ARGS__)
-#define REDIS_LOG_INF(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_INFO, MSG, ##__VA_ARGS__)
-#define REDIS_LOG_DBG(MSG, ...)         swss::Logger::getInstance().write(swss::Logger::SWSS_DEBUG, MSG, ##__VA_ARGS__)
-
-#define REDIS_LOG_ENTER()               swss::Logger::getInstance().write(swss::Logger::SWSS_DEBUG, "%s>", __FUNCTION__)
-#define REDIS_LOG_EXIT()                swss::Logger::getInstance().write(swss::Logger::SWSS_DEBUG, "%s<", __FUNCTION__)
-
 sai_object_id_t redis_create_virtual_object_id(
         _In_ sai_object_type_t object_type);
 

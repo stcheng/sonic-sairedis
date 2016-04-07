@@ -19,9 +19,11 @@ sai_status_t sai_api_initialize(
         _In_ uint64_t flags,
         _In_ const service_method_table_t* services)
 {
+    SWSS_LOG_ENTER();
+
     if ((NULL == services) || (NULL == services->profile_get_next_value) || (NULL == services->profile_get_value))
     {
-        REDIS_LOG_ERR("Invalid services handle passed to SAI API initialize\n");
+        SWSS_LOG_ERROR("Invalid services handle passed to SAI API initialize\n");
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
@@ -29,7 +31,7 @@ sai_status_t sai_api_initialize(
 
     if (0 != flags)
     {
-        REDIS_LOG_ERR("Invalid flags passed to SAI API initialize\n");
+        SWSS_LOG_ERROR("Invalid flags passed to SAI API initialize\n");
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
@@ -72,6 +74,8 @@ sai_status_t sai_log_set(
         _In_ sai_api_t sai_api_id, 
         _In_ sai_log_level_t log_level)
 {
+    SWSS_LOG_ENTER();
+
     switch (log_level)
     {
         case SAI_LOG_DEBUG:
@@ -93,7 +97,7 @@ sai_status_t sai_log_set(
             break;
 
         default:
-            REDIS_LOG_ERR("Invalid log level %d\n", log_level);
+            SWSS_LOG_ERROR("Invalid log level %d\n", log_level);
             return SAI_STATUS_INVALID_PARAMETER;
     }
 
@@ -148,7 +152,7 @@ sai_status_t sai_log_set(
             break;
 
         default:
-            REDIS_LOG_ERR("Invalid API type %d\n", sai_api_id);
+            SWSS_LOG_ERROR("Invalid API type %d\n", sai_api_id);
             return SAI_STATUS_INVALID_PARAMETER;
     }
 
@@ -159,15 +163,17 @@ sai_status_t sai_api_query(
         _In_ sai_api_t sai_api_id, 
         _Out_ void** api_method_table)
 {
+    SWSS_LOG_ENTER();
+
     if (NULL == api_method_table) 
     {
-        REDIS_LOG_ERR("NULL method table passed to SAI API initialize\n");
+        SWSS_LOG_ERROR("NULL method table passed to SAI API initialize\n");
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
     if (!g_initialized) 
     {
-        REDIS_LOG_ERR("SAI API not initialized before calling API query\n");
+        SWSS_LOG_ERROR("SAI API not initialized before calling API query\n");
         return SAI_STATUS_UNINITIALIZED;
     }
 
@@ -273,7 +279,7 @@ sai_status_t sai_api_query(
             return SAI_STATUS_SUCCESS;
 
         default:
-            REDIS_LOG_ERR("Invalid API type %d\n", sai_api_id);
+            SWSS_LOG_ERROR("Invalid API type %d\n", sai_api_id);
             return SAI_STATUS_INVALID_PARAMETER;
     }
 }

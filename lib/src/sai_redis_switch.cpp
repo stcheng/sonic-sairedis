@@ -10,7 +10,7 @@ std::shared_ptr<std::thread> notification_thread;
 
 void ntf_thread()
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     swss::Select s;
 
@@ -34,7 +34,7 @@ void ntf_thread()
             const std::string &key = kfvKey(kco);
             const std::vector<swss::FieldValueTuple> &values = kfvFieldsValues(kco);
 
-            REDIS_LOG_DBG("op = %s, key = %s", op.c_str(), key.c_str());
+            SWSS_LOG_DEBUG("notification: op = %s, key = %s", op.c_str(), key.c_str());
 
             if (op != "ntf")
                 continue;
@@ -45,8 +45,6 @@ void ntf_thread()
             handle_notification(ntf, data, values);
         }
     }
-
-    REDIS_LOG_EXIT();
 }
 
 /**
@@ -70,11 +68,11 @@ sai_status_t redis_initialize_switch(
     _In_reads_opt_z_(SAI_MAX_FIRMWARE_PATH_NAME_LEN) char* firmware_path_name,
     _In_ sai_switch_notification_t* switch_notifications)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     if (g_initialised)
     {
-        REDIS_LOG_EXIT();
+        SWSS_LOG_ERROR("switch is already initialized");
 
         return SAI_STATUS_FAILURE;
     }
@@ -94,9 +92,9 @@ sai_status_t redis_initialize_switch(
 
     g_run = true;
 
-    notification_thread = std::make_shared<std::thread>(std::thread(ntf_thread));
+    SWSS_LOG_DEBUG("creating notification thread");
 
-    REDIS_LOG_EXIT();
+    notification_thread = std::make_shared<std::thread>(std::thread(ntf_thread));
 
     return SAI_STATUS_SUCCESS;
 }
@@ -117,11 +115,12 @@ sai_status_t redis_initialize_switch(
 void  redis_shutdown_switch(
     _In_ bool warm_restart_hint)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     if (!g_initialised)
     {
-        REDIS_LOG_EXIT();
+        SWSS_LOG_ERROR("not initialized");
+
         return;
     }
 
@@ -132,8 +131,6 @@ void  redis_shutdown_switch(
     g_initialised = false;
 
     memset(&redis_switch_notifications, 0, sizeof(sai_switch_notification_t));
-
-    REDIS_LOG_EXIT();
 }
 
 /**
@@ -155,9 +152,7 @@ sai_status_t redis_connect_switch(
     _In_reads_z_(SAI_MAX_HARDWARE_ID_LEN) char* switch_hardware_id,
     _In_ sai_switch_notification_t* switch_notifications)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -171,12 +166,9 @@ sai_status_t redis_connect_switch(
  * Return Values:
  *   None
  */
-void  redis_disconnect_switch(
-    void)
+void redis_disconnect_switch(void)
 {
-    REDIS_LOG_ENTER();
-
-    REDIS_LOG_EXIT();
+    SWSS_LOG_ENTER();
 }
 
 /**
@@ -193,14 +185,12 @@ void  redis_disconnect_switch(
 sai_status_t  redis_set_switch_attribute(
     _In_ const sai_attribute_t *attr)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_SWITCH,
             (sai_object_id_t)0, // dummy sai_object_id_t for switch
             attr);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }
@@ -221,15 +211,13 @@ sai_status_t  redis_get_switch_attribute(
     _In_ sai_uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_SWITCH,
             (sai_object_id_t)0,
             attr_count,
             attr_list);
-
-    REDIS_LOG_EXIT();
 
     return status;
 }

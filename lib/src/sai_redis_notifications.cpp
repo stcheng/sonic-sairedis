@@ -3,7 +3,9 @@
 void handle_switch_state_change(
         _In_ const std::string &data)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
+
+    SWSS_LOG_DEBUG("data: %s", data.c_str());
 
     int index = 0;
 
@@ -14,16 +16,18 @@ void handle_switch_state_change(
 
     if (on_switch_state_change != NULL)
     {
+        SWSS_LOG_ENTER();
+
         on_switch_state_change(switch_oper_status);
     }
-
-    REDIS_LOG_EXIT();
 }
 
 void handle_fdb_event(
         _In_ const std::string &data)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
+
+    SWSS_LOG_DEBUG("data: %s", data.c_str());
 
     int index = 0;
 
@@ -42,9 +46,8 @@ void handle_fdb_event(
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            REDIS_LOG_ERR("Unable to deserialize fdb event, status: %u", status);
+            SWSS_LOG_ERROR("Unable to deserialize fdb event, status: %u", status);
 
-            REDIS_LOG_EXIT();
             return;
         }
     }
@@ -53,6 +56,8 @@ void handle_fdb_event(
 
     if (on_fdb_event != NULL)
     {
+        SWSS_LOG_ENTER();
+
         on_fdb_event(count, fdbdata.data());
     }
 
@@ -64,17 +69,17 @@ void handle_fdb_event(
 
         if (status != SAI_STATUS_SUCCESS)
         {
-            REDIS_LOG_ERR("Unable to free fdb event, status: %u", status);
+            SWSS_LOG_ERROR("Unable to free fdb event, status: %u", status);
         }
     }
-
-    REDIS_LOG_EXIT();
 }
 
 void handle_port_state_change(
         _In_ const std::string &data)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
+
+    SWSS_LOG_DEBUG("data: %s", data.c_str());
 
     int index = 0;
 
@@ -97,16 +102,18 @@ void handle_port_state_change(
 
     if (on_port_state_change != NULL)
     {
+        SWSS_LOG_ENTER();
+
         on_port_state_change(count, portdata.data());
     }
-
-    REDIS_LOG_EXIT();
 }
 
 void handle_port_event(
         _In_ const std::string &data)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
+
+    SWSS_LOG_DEBUG("data: %s", data.c_str());
 
     int index = 0;
 
@@ -129,32 +136,36 @@ void handle_port_event(
 
     if (on_port_event != NULL)
     {
+        SWSS_LOG_ENTER();
+
         on_port_event(count, portdata.data());
     }
-
-    REDIS_LOG_EXIT();
 }
 
 void handle_switch_shutdown_request(
         _In_ const std::string &data)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
+
+    SWSS_LOG_DEBUG("data: %s", data.c_str());
 
     auto on_switch_shutdown_request = redis_switch_notifications.on_switch_shutdown_request;
 
     if (on_switch_shutdown_request != NULL)
     {
+        SWSS_LOG_ENTER();
+
         on_switch_shutdown_request();
     }
-
-    REDIS_LOG_EXIT();
 }
 
 void handle_packet_event(
         _In_ const std::string &data,
         _In_ const std::vector<swss::FieldValueTuple> &values)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
+
+    SWSS_LOG_DEBUG("data: %s, values: %lu", data.c_str(), values.size());
 
     sai_size_t buffer_size;
 
@@ -174,10 +185,10 @@ void handle_packet_event(
 
     if (on_packet_event != NULL)
     {
+        SWSS_LOG_ENTER();
+
         on_packet_event(buffer.data(), buffer_size, list.get_attr_count(), list.get_attr_list());
     }
-
-    REDIS_LOG_EXIT();
 }
 
 void handle_notification(
@@ -185,7 +196,7 @@ void handle_notification(
         _In_ const std::string &data,
         _In_ const std::vector<swss::FieldValueTuple> &values)
 {
-    REDIS_LOG_ENTER();
+    SWSS_LOG_ENTER();
 
     if (notification == "switch_state_change")
     {
@@ -213,8 +224,6 @@ void handle_notification(
     }
     else
     {
-        REDIS_LOG_ERR("unknow notification: %s", notification.c_str());
+        SWSS_LOG_ERROR("unknow notification: %s", notification.c_str());
     }
-
-    REDIS_LOG_EXIT();
 }
