@@ -796,6 +796,42 @@ void handler(int sig)
     exit(EXIT_FAILURE);
 }
 
+swss::Logger::Priority redisGetLogLevel()
+{
+    SWSS_LOG_ENTER();
+
+    auto plevel = g_redisClient->get("LOGLEVEL");
+
+    if (plevel == NULL)
+        return swss::Logger::SWSS_NOTICE;
+
+    return swss::Logger::stringToPriority(*plevel);
+}
+
+void redisSetLogLevel(swss::Logger::Priority prio)
+{
+    SWSS_LOG_ENTER();
+
+    std::string level = swss::Logger::priorityToString(prio);
+
+    g_redisClient->set("LOGLEVEL", level);
+}
+
+void updateLogLevel()
+{
+    auto level = redisGetLogLevel();
+
+    if (level != swss::Logger::getInstance().getMinPrio())
+    {
+        swss::Logger::getInstance().setMinPrio(level);
+
+        SWSS_LOG_NOTICE("log level changed to %s", swss::Logger::priorityToString(level).c_str());
+
+        // set level to correct one if user set some invalid value
+        redisSetLogLevel(level);
+    }
+}
+
 int main(int argc, char **argv)
 {
     swss::Logger::getInstance().setMinPrio(swss::Logger::SWSS_DEBUG);
@@ -808,6 +844,8 @@ int main(int argc, char **argv)
     swss::DBConnector *dbNtf = new swss::DBConnector(ASIC_DB, "localhost", 6379, 0);
 
     g_redisClient = new swss::RedisClient(db);
+
+    updateLogLevel();
 
     swss::ConsumerTable *asicState = new swss::ConsumerTable(db, "ASIC_STATE");
 
@@ -857,6 +895,8 @@ int main(int argc, char **argv)
     {
         onSyncdStart();
 
+        SWSS_LOG_INFO("syncd listening for events");
+
         swss::Select s;
 
         s.addSelectable(getRequest);
@@ -874,6 +914,9 @@ int main(int argc, char **argv)
             {
                 processEvent(*(swss::ConsumerTable*)sel);
             }
+
+            // TODO may be not efficient to do it here
+            updateLogLevel();
         }
     }
     catch(const std::exception &e)
