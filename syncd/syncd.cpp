@@ -691,6 +691,8 @@ sai_status_t processEvent(swss::ConsumerTable &consumer)
         api = SAI_COMMON_API_GET;
     else
     {
+        SWSS_LOG_ERROR("api %s is not implemented", op.c_str());
+
         return SAI_STATUS_NOT_SUPPORTED;
     }
 
@@ -863,6 +865,7 @@ int main(int argc, char **argv)
     initialize_common_api_pointers();
 
 #if 1
+
     sai_status_t status = sai_switch_api->initialize_switch(0, "0xb850", "", &switch_notifications);
 
     if (status != SAI_STATUS_SUCCESS)

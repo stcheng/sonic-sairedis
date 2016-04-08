@@ -468,6 +468,55 @@ void helperCheckCpuId()
     }
 }
 
+void helperCheckPortIds()
+{
+    SWSS_LOG_ENTER();
+
+    // we need lock here since after initialization
+    // some notifications may appear and it may cause
+    // race condition for port id generation
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    // it may happen that after initialize we will receive
+    // some port notifications with port'ids that are not in
+    // redis db yet, so after checking VIDTORID map there will
+    // be entries and translate_vid_to_rid will generate new
+    // id's for ports
+
+    auto laneMap = saiGetHardwareLaneMap();
+
+    for (auto kv: laneMap)
+    {
+        sai_object_id_t portId = kv.second;
+
+        // translate will create entry if missing
+        // we assume here that port numbers didn't changed
+        // during restarts
+        sai_object_id_t vid = translate_rid_to_vid(portId);
+
+        sai_object_type_t objectType = sai_object_type_query(portId);
+
+        if (objectType == SAI_OBJECT_TYPE_NULL)
+        {
+            SWSS_LOG_ERROR("sai_object_type_query returned NULL type for RID %llx", portId);
+
+            exit(EXIT_FAILURE);
+        }
+
+        std::string strObjectType;
+
+        sai_serialize_primitive(objectType, strObjectType);
+
+        std::string strVid;
+
+        sai_serialize_primitive(vid, strVid);
+
+        std::string strKey = "ASIC_STATE:" + strObjectType + ":" + strVid;
+
+        g_redisClient->hset(strKey, "NULL", "NULL");
+    }
+}
+
 void helperCheckVlanId()
 {
     SWSS_LOG_ENTER();
@@ -502,6 +551,8 @@ void onSyncdStart()
     helperCheckVirtualRouterId();
 
     helperCheckVlanId();
+
+    helperCheckPortIds();
 
     hardReinit();
 }
