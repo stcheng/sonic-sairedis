@@ -251,7 +251,17 @@ sai_object_id_t processSingleVid(sai_object_id_t vid)
 
     if (objectType == SAI_OBJECT_TYPE_VIRTUAL_ROUTER)
     {
-        sai_object_id_t virtualRouterRid = g_vidToRidMap.at(vid);
+        auto it = g_vidToRidMap.find(vid);
+
+        if (it == g_vidToRidMap.end())
+        {
+            SWSS_LOG_ERROR("failed to find VID %llx in VIDTORID map", vid);
+
+            exit(EXIT_FAILURE);
+        }
+
+        sai_object_id_t virtualRouterRid = it->second;
+
         sai_object_id_t defaultVirtualRouterId = redisGetDefaultVirtualRouterId();
 
         if (virtualRouterRid == defaultVirtualRouterId)
@@ -263,7 +273,7 @@ sai_object_id_t processSingleVid(sai_object_id_t vid)
 
             createObject = false;
             
-            SWSS_LOG_DEBUG("default virtual router will not be created, processed VID %llx to RID %llx", vid, rid);
+            SWSS_LOG_INFO("default virtual router will not be created, processed VID %llx to RID %llx", vid, rid);
         }
 
     }
@@ -272,14 +282,32 @@ sai_object_id_t processSingleVid(sai_object_id_t vid)
         // currently we assume that port id's don't change,
         // so we can just treat previous rid as current rid
 
-        rid = g_vidToRidMap.at(vid);
+        auto it = g_vidToRidMap.find(vid);
+
+        if (it == g_vidToRidMap.end())
+        {
+            SWSS_LOG_ERROR("failed to find VID %llx in VIDTORID map", vid);
+
+            exit(EXIT_FAILURE);
+        }
+
+        rid = it->second;
 
         createObject = false;
 
-        SWSS_LOG_DEBUG("port will not be created, processed VID %llx to RID %llx", vid, rid);
+        SWSS_LOG_INFO("port will not be created, processed VID %llx to RID %llx", vid, rid);
     }
 
-    std::string asicKey = g_oids.at(strVid);
+    auto oit = g_oids.find(strVid);
+
+    if (oit == g_oids.end())
+    {
+        SWSS_LOG_ERROR("failed to find VID %s in OIDs map", strVid.c_str());
+
+        exit(EXIT_FAILURE);
+    }
+
+    std::string asicKey = oit->second;;
 
     std::shared_ptr<SaiAttributeList> list = g_attributesLists[asicKey];
 

@@ -6,6 +6,7 @@ service_method_table_t g_services;
 bool                   g_initialized = false;
 
 swss::DBConnector     *g_db = NULL;
+swss::DBConnector     *g_dbNtf = NULL;
 swss::ProducerTable   *g_asicState = NULL;
 
 // we probably don't need those to tables to access GET requests
@@ -40,6 +41,11 @@ sai_status_t sai_api_initialize(
 
     g_db = new swss::DBConnector(ASIC_DB, "localhost", 6379, 0);
 
+    if (g_dbNtf != NULL)
+        delete g_dbNtf;
+
+    g_dbNtf = new swss::DBConnector(ASIC_DB, "localhost", 6379, 0);
+
     if (g_asicState != NULL)
         delete g_asicState;
 
@@ -58,7 +64,7 @@ sai_status_t sai_api_initialize(
     if (g_redisNotifications != NULL)
         delete g_redisNotifications;
 
-    g_redisNotifications = new swss::ConsumerTable(g_db, "NOTIFICATIONS");
+    g_redisNotifications = new swss::ConsumerTable(g_dbNtf, "NOTIFICATIONS");
 
     if (g_redisClient != NULL)
         delete g_redisClient;

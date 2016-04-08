@@ -272,7 +272,7 @@ void helperCheckLaneMap()
 
     if (redisLaneMap.size() == 0)
     {
-        SWSS_LOG_DEBUG("no lanes defined in redis, seems like it is first syncd start");
+        SWSS_LOG_INFO("no lanes defined in redis, seems like it is first syncd start");
 
         // TODO put ports to db ?
         redisSaveLaneMap(laneMap);
@@ -368,7 +368,7 @@ void redisCreateRidAndVidMapping(sai_object_id_t rid, sai_object_id_t vid)
     g_redisClient->hset(VIDTORID, strVid, strRid);
     g_redisClient->hset(RIDTOVID, strRid, strVid);
 
-    SWSS_LOG_DEBUG("set VID %llx and RID %llx map", vid, rid);
+    SWSS_LOG_DEBUG("set VID %llx and RID %llx", vid, rid);
 }
 
 void redisSetDummyAsicStateForRealObjectId(sai_object_id_t rid)
@@ -413,7 +413,7 @@ void helperCheckVirtualRouterId()
     {
         redisSetDummyAsicStateForRealObjectId(vrId);
 
-        SWSS_LOG_DEBUG("redis default virtual router id is not defined yet");
+        SWSS_LOG_INFO("redis default virtual router id is not defined yet");
 
         redisSetDefaultVirtualRouterId(vrId);
 
@@ -452,7 +452,7 @@ void helperCheckCpuId()
     {
         redisSetDummyAsicStateForRealObjectId(cpuId);
 
-        SWSS_LOG_DEBUG("redis cpu id is not defined yet");
+        SWSS_LOG_INFO("redis cpu id is not defined yet");
 
         redisSetCpuId(cpuId);
 

@@ -73,7 +73,7 @@ sai_object_id_t translate_rid_to_vid(
         return vid;
     }
 
-    SWSS_LOG_DEBUG("spotted new RID %llx", rid);
+    SWSS_LOG_INFO("spotted new RID %llx", rid);
 
     sai_object_type_t object_type = sai_object_type_query(rid);
 
@@ -672,7 +672,7 @@ sai_status_t processEvent(swss::ConsumerTable &consumer)
     std::string str_object_type = key.substr(0, key.find(":"));
     std::string str_object_id = key.substr(key.find(":")+1);
 
-    SWSS_LOG_DEBUG(
+    SWSS_LOG_INFO(
             "key: %s op: %s objtype: %s objid: %s",
             key.c_str(),
             op.c_str(),
@@ -805,6 +805,7 @@ int main(int argc, char **argv)
     signal(SIGSEGV, handler);
 
     swss::DBConnector *db = new swss::DBConnector(ASIC_DB, "localhost", 6379, 0);
+    swss::DBConnector *dbNtf = new swss::DBConnector(ASIC_DB, "localhost", 6379, 0);
 
     g_redisClient = new swss::RedisClient(db);
 
@@ -815,7 +816,7 @@ int main(int argc, char **argv)
     // also "remove" from response queue will also trigger another "response"
     getRequest = new swss::ConsumerTable(db, "GETREQUEST");
     getResponse  = new swss::ProducerTable(db, "GETRESPONSE");
-    notifications = new swss::ProducerTable(db, "NOTIFICATIONS");
+    notifications = new swss::ProducerTable(dbNtf, "NOTIFICATIONS");
 
     sai_api_initialize(0, (service_method_table_t*)&test_services);
 
