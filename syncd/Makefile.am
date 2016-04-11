@@ -14,6 +14,7 @@ syncd_SOURCES = syncd.cpp \
 		syncd_reinit.cpp \
 		syncd_hard_reinit.cpp \
 		syncd_notifications.cpp \
+		../common/redisclient.cpp \
 		../common/saiserialize.cpp \
 		../common/saiattributelist.cpp
 

@@ -589,7 +589,7 @@ sai_status_t handle_route(
             return sai_route_api->set_route_attribute(&route_entry, attr_list);
 
         case SAI_COMMON_API_GET:
-                return sai_route_api->get_route_attribute(&route_entry, attr_count, attr_list);
+            return sai_route_api->get_route_attribute(&route_entry, attr_count, attr_list);
 
         default:
             SWSS_LOG_ERROR("route other apis not implemented");
@@ -691,7 +691,8 @@ sai_status_t processEvent(swss::ConsumerTable &consumer)
         api = SAI_COMMON_API_GET;
     else
     {
-        SWSS_LOG_ERROR("api %s is not implemented", op.c_str());
+        if (op != "delget")
+            SWSS_LOG_ERROR("api %s is not implemented", op.c_str());
 
         return SAI_STATUS_NOT_SUPPORTED;
     }
@@ -821,6 +822,8 @@ void redisSetLogLevel(swss::Logger::Priority prio)
 
 void updateLogLevel()
 {
+    std::lock_guard<std::mutex> lock(g_mutex);
+
     auto level = redisGetLogLevel();
 
     if (level != swss::Logger::getInstance().getMinPrio())

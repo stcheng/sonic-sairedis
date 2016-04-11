@@ -9,6 +9,7 @@ extern "C" {
 }
 #include "saiserialize.h"
 #include "saiattributelist.h"
+#include "redisclient.h"
 
 #include "swss/dbconnector.h"
 #include "swss/producertable.h"
@@ -17,7 +18,6 @@ extern "C" {
 #include "swss/select.h"
 #include "swss/scheme.h"
 #include "swss/logger.h"
-#include "swss/redisclient.h"
 
 extern service_method_table_t           g_services;
 extern swss::DBConnector               *g_db;

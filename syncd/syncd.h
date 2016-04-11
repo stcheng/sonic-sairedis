@@ -16,6 +16,7 @@ extern "C" {
 #include "sai.h"
 }
 
+#include "common/redisclient.h"
 #include "common/saiserialize.h"
 #include "common/saiattributelist.h"
 #include "swss/dbconnector.h"
@@ -25,7 +26,6 @@ extern "C" {
 #include "swss/scheme.h"
 #include "swss/logger.h"
 #include "swss/table.h"
-#include "swss/redisclient.h"
 
 #define UNREFERENCED_PARAMETER(X)
 
