@@ -271,7 +271,7 @@ sai_status_t sai_serialize_attr_value(
             break;
 
         case SAI_SERIALIZATION_TYPE_IP_ADDRESS:
-            sai_serialize_primitive(attr.value.ipaddr, s);
+            sai_serialize_ip_address(attr.value.ipaddr, s);
             break;
 
         case SAI_SERIALIZATION_TYPE_OBJECT_ID:
@@ -557,7 +557,7 @@ sai_status_t sai_deserialize_attr_value(
             break;
 
         case SAI_SERIALIZATION_TYPE_IP_ADDRESS:
-            sai_deserialize_primitive(s, index, attr.value.ipaddr);
+            sai_deserialize_ip_address(s, index, attr.value.ipaddr);
             break;
 
         case SAI_SERIALIZATION_TYPE_OBJECT_ID:
@@ -1361,4 +1361,108 @@ void transfer_attributes(
 
         transfer_attribute(serialization_type, src_attr, dst_attr, countOnly);
     }
+}
+
+void sai_serialize_ip_address(
+        _In_ const sai_ip_address_t &ip_address,
+        _Out_ std::string &s)
+{
+    sai_serialize_primitive(ip_address.addr_family, s);
+
+    if (ip_address.addr_family == SAI_IP_ADDR_FAMILY_IPV4)
+        sai_serialize_primitive(ip_address.addr.ip4, s);
+
+    if (ip_address.addr_family == SAI_IP_ADDR_FAMILY_IPV6)
+        sai_serialize_primitive(ip_address.addr.ip6, s);
+}
+
+void sai_serialize_neighbor_entry(
+        _In_ const sai_neighbor_entry_t &ne,
+        _Out_ std::string &s)
+{
+    sai_serialize_primitive(ne.rif_id, s);
+
+    sai_serialize_ip_address(ne.ip_address, s);
+}
+
+void sai_deserialize_ip_address(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_ip_address_t &ip_address)
+{
+    sai_deserialize_primitive(s, index, ip_address.addr_family);
+
+    if (ip_address.addr_family == SAI_IP_ADDR_FAMILY_IPV4)
+        sai_deserialize_primitive(s, index, ip_address.addr.ip4);
+
+    if (ip_address.addr_family == SAI_IP_ADDR_FAMILY_IPV6)
+        sai_deserialize_primitive(s, index, ip_address.addr.ip6);
+}
+
+void sai_deserialize_neighbor_entry(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_neighbor_entry_t &ne)
+{
+    sai_deserialize_primitive(s, index, ne.rif_id);
+
+    sai_deserialize_ip_address(s, index, ne.ip_address);
+}
+
+void sai_serialize_ip_prefix(
+        _In_ const sai_ip_prefix_t &ip_prefix,
+        _Out_ std::string &s)
+{
+    sai_serialize_primitive(ip_prefix.addr_family, s);
+
+    if (ip_prefix.addr_family == SAI_IP_ADDR_FAMILY_IPV4)
+    {
+        sai_serialize_primitive(ip_prefix.addr.ip4, s);
+        sai_serialize_primitive(ip_prefix.mask.ip4, s);
+    }
+
+    if (ip_prefix.addr_family == SAI_IP_ADDR_FAMILY_IPV6)
+    {
+        sai_serialize_primitive(ip_prefix.addr.ip6, s);
+        sai_serialize_primitive(ip_prefix.mask.ip6, s);
+    }
+}
+
+void sai_serialize_route_entry(
+        _In_ const sai_unicast_route_entry_t &re,
+        _Out_ std::string &s)
+{
+    sai_serialize_primitive(re.vr_id, s);
+
+    sai_serialize_ip_prefix(re.destination, s);
+}
+
+void sai_deserialize_ip_prefix(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_ip_prefix_t &ip_prefix)
+{
+    sai_deserialize_primitive(s, index, ip_prefix.addr_family);
+
+    if (ip_prefix.addr_family == SAI_IP_ADDR_FAMILY_IPV4)
+    {
+        sai_deserialize_primitive(s, index, ip_prefix.addr.ip4);
+        sai_deserialize_primitive(s, index, ip_prefix.mask.ip4);
+    }
+
+    if (ip_prefix.addr_family == SAI_IP_ADDR_FAMILY_IPV6)
+    {
+        sai_deserialize_primitive(s, index, ip_prefix.addr.ip6);
+        sai_deserialize_primitive(s, index, ip_prefix.mask.ip6);
+    }
+}
+
+void sai_deserialize_route_entry(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_unicast_route_entry_t &re)
+{
+    sai_deserialize_primitive(s, index, re.vr_id);
+
+    sai_deserialize_ip_prefix(s, index, re.destination);
 }

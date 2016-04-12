@@ -539,7 +539,7 @@ sai_status_t handle_neighbor(
 
     int index = 0;
     sai_neighbor_entry_t neighbor_entry;
-    sai_deserialize_primitive(str_object_id, index, neighbor_entry);
+    sai_deserialize_neighbor_entry(str_object_id, index, neighbor_entry);
 
     neighbor_entry.rif_id = translate_vid_to_rid(neighbor_entry.rif_id);
 
@@ -573,7 +573,7 @@ sai_status_t handle_route(
 
     int index = 0;
     sai_unicast_route_entry_t route_entry;
-    sai_deserialize_primitive(str_object_id, index, route_entry);
+    sai_deserialize_route_entry(str_object_id, index, route_entry);
 
     route_entry.vr_id = translate_vid_to_rid(route_entry.vr_id);
 

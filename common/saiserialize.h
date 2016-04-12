@@ -240,6 +240,42 @@ void transfer_list(
     }
 }
 
+void sai_serialize_ip_address(
+        _In_ const sai_ip_address_t &ip_address,
+        _Out_ std::string &s);
+
+void sai_deserialize_ip_address(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_ip_address_t &ip_address);
+
+void sai_serialize_ip_prefix(
+        _In_ const sai_ip_prefix_t &ip_prefix,
+        _Out_ std::string &s);
+
+void sai_deserialize_ip_prefix(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_ip_prefix_t &ip_prefix);
+
+void sai_serialize_neighbor_entry(
+        _In_ const sai_neighbor_entry_t &ne,
+        _Out_ std::string &s);
+
+void sai_deserialize_neighbor_entry(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_neighbor_entry_t &ne);
+
+void sai_serialize_route_entry(
+        _In_ const sai_unicast_route_entry_t &ne,
+        _Out_ std::string &s);
+
+void sai_deserialize_route_entry(
+        _In_ const std::string & s,
+        _In_ int &index,
+        _Out_ sai_unicast_route_entry_t &ne);
+
 sai_status_t sai_deserialize_attr_value(
         _In_ const std::string &s,
         _In_ int &index,

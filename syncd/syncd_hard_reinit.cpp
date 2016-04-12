@@ -617,7 +617,7 @@ sai_neighbor_entry_t getNeighborEntryFromString(const std::string &strNeighborEn
 
     int index = 0;
     sai_neighbor_entry_t neighborEntry;
-    sai_deserialize_primitive(strNeighborEntry, index, neighborEntry);
+    sai_deserialize_neighbor_entry(strNeighborEntry, index, neighborEntry);
 
     return neighborEntry;
 }
@@ -660,7 +660,7 @@ sai_unicast_route_entry_t getRouteEntryFromString(const std::string &strRouteEnt
 
     int index = 0;
     sai_unicast_route_entry_t routeEntry;
-    sai_deserialize_primitive(strRouteEntry, index, routeEntry);
+    sai_deserialize_route_entry(strRouteEntry, index, routeEntry);
 
     return routeEntry;
 }
