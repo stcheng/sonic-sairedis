@@ -10,12 +10,18 @@
 # Description:       Enable service syncd.
 ### END INIT INFO
 
+DAEMON=/usr/bin/syncd
+DAEMON_ARGS="-p /etc/syncd.d/mlnx_2700.profile -N"
+
 case "$1" in
 start)
     mkdir -p /dev/sxdevs
     [ -e /dev/sxdevs/sxcdev ] || mknod /dev/sxdevs/sxcdev c 231 193
+
+    start-stop-daemon --start --quiet --exec $DAEMON $DAEMON_ARGS
     ;;
 stop)
+    start-stop-daemon --stop --quiet --exec $DAEMON
     ;;
 *)
     echo "Usage: service syncd {start|stop}"
