@@ -21,17 +21,25 @@ sai_status_t redis_validate_neighbor_entry(
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
-    sai_object_type_t rif = sai_object_type_query(neighbor_entry->rif_id);
+    sai_object_id_t rif_id = neighbor_entry->rif_id;
 
-    if (rif != SAI_OBJECT_TYPE_ROUTER_INTERFACE)
+    sai_object_type_t rif_type = sai_object_type_query(rif_id);
+
+    if (rif_type != SAI_OBJECT_TYPE_ROUTER_INTERFACE)
     {
-        SWSS_LOG_ERROR("neighbor_entry.rif_id type is not SAI_OBJECT_TYPE_ROUTER_INTERFACE: %d, id: %llx", rif, neighbor_entry->rif_id);
+        SWSS_LOG_ERROR("neighbor_entry.rif_id type is not SAI_OBJECT_TYPE_ROUTER_INTERFACE: %d, id: %llx", rif_type, rif_id);
 
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
     // TODO check if ip address is correct (as spearate api)
-    // TODO check if rif exists it must be created by user and we need to keep track
+
+    if (local_router_interfaces_set.find(rif_id) == local_router_interfaces_set.end())
+    {
+        SWSS_LOG_ERROR("router interface id %llx is does not exists", rif_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     return SAI_STATUS_SUCCESS;
 }
@@ -137,6 +145,8 @@ sai_status_t  redis_create_neighbor_entry(
         SWSS_LOG_DEBUG("inserting neighbor entry %s to local state", str_neighbor_entry.c_str());
 
         local_neighbor_entries_set.insert(str_neighbor_entry);
+
+        // TODO increase router interface reference count to prevend delete
     }
 
     return status;
@@ -183,6 +193,8 @@ sai_status_t  redis_remove_neighbor_entry(
         SWSS_LOG_DEBUG("erasing neighbor entry %s from local state", str_neighbor_entry.c_str());
 
         local_neighbor_entries_set.erase(str_neighbor_entry);
+
+        // TODO decrease router interface count
     }
 
     return status;
