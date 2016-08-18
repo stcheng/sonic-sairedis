@@ -2,6 +2,7 @@
 #define __SAI_REDIS__
 
 #include <mutex>
+#include <set>
 
 #include "stdint.h"
 #include "stdio.h"
@@ -21,6 +22,12 @@ extern "C" {
 #include "swss/table.h"
 #include "swss/select.h"
 #include "swss/logger.h"
+
+// local redis state
+extern std::set<sai_object_id_t>        local_router_interfaces_set;
+extern std::set<std::string>            local_neighbor_entries_set;
+
+// other global declarations
 
 extern service_method_table_t           g_services;
 extern swss::DBConnector               *g_db;

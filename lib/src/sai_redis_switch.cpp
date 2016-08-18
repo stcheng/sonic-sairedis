@@ -108,6 +108,13 @@ sai_status_t notify_syncd(const std::string &op)
     return SAI_STATUS_FAILURE;
 }
 
+void clear_local_state()
+{
+    local_router_interfaces_set.clear();
+
+    local_neighbor_entries_set.clear();
+}
+
 /**
 * Routine Description:
 *   SDK initialization. After the call the capability attributes should be
@@ -190,6 +197,8 @@ sai_status_t redis_initialize_switch(
     {
         memset(&redis_switch_notifications, 0, sizeof(sai_switch_notification_t));
     }
+
+    clear_local_state();
 
     g_run = true;
 

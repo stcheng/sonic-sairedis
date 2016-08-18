@@ -1,7 +1,6 @@
 #include "sai_redis.h"
-#include <set>
 
-std::set<std::string> neighbor_entries_set;
+std::set<std::string> local_neighbor_entries_set;
 
 sai_status_t redis_validate_neighbor_entry(
     _In_ const sai_neighbor_entry_t* neighbor_entry)
@@ -26,7 +25,7 @@ sai_status_t redis_validate_neighbor_entry(
 
     if (rif != SAI_OBJECT_TYPE_ROUTER_INTERFACE)
     {
-        SWSS_LOG_ERROR("neighbor_entry.rif_id type is not SAI_OBJECT_TYPE_ROUTER_INTERFACE: %d", rif);
+        SWSS_LOG_ERROR("neighbor_entry.rif_id type is not SAI_OBJECT_TYPE_ROUTER_INTERFACE: %d, id: %llx", rif, neighbor_entry->rif_id);
 
         return SAI_STATUS_INVALID_PARAMETER;
     }
@@ -120,7 +119,7 @@ sai_status_t  redis_create_neighbor_entry(
     std::string str_neighbor_entry;
     sai_serialize_neighbor_entry(*neighbor_entry, str_neighbor_entry);
 
-    if (neighbor_entries_set.find(str_neighbor_entry) != neighbor_entries_set.end())
+    if (local_neighbor_entries_set.find(str_neighbor_entry) != local_neighbor_entries_set.end())
     {
         SWSS_LOG_ERROR("neighbor_entry %s already exists", str_neighbor_entry.c_str());
 
@@ -137,7 +136,7 @@ sai_status_t  redis_create_neighbor_entry(
     {
         SWSS_LOG_DEBUG("inserting neighbor entry %s to local state", str_neighbor_entry.c_str());
 
-        neighbor_entries_set.insert(str_neighbor_entry);
+        local_neighbor_entries_set.insert(str_neighbor_entry);
     }
 
     return status;
@@ -168,7 +167,7 @@ sai_status_t  redis_remove_neighbor_entry(
     std::string str_neighbor_entry;
     sai_serialize_neighbor_entry(*neighbor_entry, str_neighbor_entry);
 
-    if (neighbor_entries_set.find(str_neighbor_entry) == neighbor_entries_set.end())
+    if (local_neighbor_entries_set.find(str_neighbor_entry) == local_neighbor_entries_set.end())
     {
         SWSS_LOG_ERROR("neighbor_entry %s is missing", str_neighbor_entry.c_str());
 
@@ -183,7 +182,7 @@ sai_status_t  redis_remove_neighbor_entry(
     {
         SWSS_LOG_DEBUG("erasing neighbor entry %s from local state", str_neighbor_entry.c_str());
 
-        neighbor_entries_set.erase(str_neighbor_entry);
+        local_neighbor_entries_set.erase(str_neighbor_entry);
     }
 
     return status;
@@ -221,7 +220,7 @@ sai_status_t  redis_set_neighbor_attribute(
     std::string str_neighbor_entry;
     sai_serialize_neighbor_entry(*neighbor_entry, str_neighbor_entry);
 
-    if (neighbor_entries_set.find(str_neighbor_entry) == neighbor_entries_set.end())
+    if (local_neighbor_entries_set.find(str_neighbor_entry) == local_neighbor_entries_set.end())
     {
         SWSS_LOG_ERROR("neighbor_entry %s is missing", str_neighbor_entry.c_str());
 
@@ -277,7 +276,7 @@ sai_status_t  redis_get_neighbor_attribute(
     std::string str_neighbor_entry;
     sai_serialize_neighbor_entry(*neighbor_entry, str_neighbor_entry);
 
-    if (neighbor_entries_set.find(str_neighbor_entry) == neighbor_entries_set.end())
+    if (local_neighbor_entries_set.find(str_neighbor_entry) == local_neighbor_entries_set.end())
     {
         SWSS_LOG_ERROR("neighbor_entry %s is missing", str_neighbor_entry.c_str());
 
