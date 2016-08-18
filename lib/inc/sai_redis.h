@@ -38,6 +38,7 @@ extern swss::Table *g_ridToVid;
 extern swss::RedisClient               *g_redisClient;
 
 extern std::mutex g_mutex;
+extern std::mutex g_apimutex;
 
 extern const sai_acl_api_t              redis_acl_api;
 extern const sai_buffer_api_t           redis_buffer_api;

@@ -27,6 +27,22 @@ sai_object_id_t redis_create_virtual_object_id(
 }
 
 /**
+ * Routine Description:
+ *     @brief  Query sai object type.
+ *
+ * Arguments:
+ *     @param[in] sai_object_id
+ *
+ * Return Values:
+ *    @return  Return SAI_OBJECT_TYPE_NULL when sai_object_id is not valid.
+ *             Otherwise, return a valid sai object type SAI_OBJECT_TYPE_XXX
+ */
+sai_object_type_t sai_object_type_query(_In_ sai_object_id_t sai_object_id)
+{
+    return (sai_object_type_t)(sai_object_id >> 48);
+}
+
+/**
  *   Routine Description:
  *    @brief Generic create method
  *
