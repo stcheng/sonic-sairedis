@@ -116,6 +116,20 @@ sai_status_t redis_generic_create(
 {
     SWSS_LOG_ENTER();
 
+    if (object_id == NULL)
+    {
+        SWSS_LOG_ERROR("object id pointer is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     // on create vid is put in db by syncd
     *object_id = redis_create_virtual_object_id(object_type);
 
