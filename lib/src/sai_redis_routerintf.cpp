@@ -46,9 +46,9 @@ sai_status_t redis_create_router_interface(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     if (attr_list == NULL)
     {
@@ -195,9 +195,9 @@ sai_status_t redis_create_router_interface(
 sai_status_t redis_remove_router_interface(
     _In_ sai_object_id_t rif_id)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     if (local_router_interfaces_set.find(rif_id) == local_router_interfaces_set.end())
     {
@@ -239,9 +239,9 @@ sai_status_t  redis_set_router_interface_attribute(
     _In_ sai_object_id_t rif_id,
     _In_ const sai_attribute_t *attr)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     if (attr == NULL)
     {
@@ -293,9 +293,9 @@ sai_status_t  redis_get_router_interface_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     if (attr_list == NULL)
     {

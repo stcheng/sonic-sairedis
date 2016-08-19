@@ -94,9 +94,9 @@ sai_status_t  redis_create_neighbor_entry(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_NEIGHBOR_ENTRY(neighbor_entry);
 
@@ -168,9 +168,9 @@ sai_status_t  redis_create_neighbor_entry(
 sai_status_t  redis_remove_neighbor_entry(
     _In_ const sai_neighbor_entry_t* neighbor_entry)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_NEIGHBOR_ENTRY(neighbor_entry);
 
@@ -216,9 +216,9 @@ sai_status_t  redis_set_neighbor_attribute(
     _In_ const sai_neighbor_entry_t* neighbor_entry,
     _In_ const sai_attribute_t *attr)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_NEIGHBOR_ENTRY(neighbor_entry);
 
@@ -283,9 +283,9 @@ sai_status_t  redis_get_neighbor_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_NEIGHBOR_ENTRY(neighbor_entry);
 

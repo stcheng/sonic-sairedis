@@ -71,9 +71,9 @@ sai_status_t  redis_create_route(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_ROUTE_ENTRY(unicast_route_entry);
 
@@ -159,9 +159,9 @@ sai_status_t  redis_create_route(
 sai_status_t  redis_remove_route(
     _In_ const sai_unicast_route_entry_t* unicast_route_entry)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_ROUTE_ENTRY(unicast_route_entry);
 
@@ -207,9 +207,9 @@ sai_status_t  redis_set_route_attribute(
     _In_ const sai_unicast_route_entry_t* unicast_route_entry,
     _In_ const sai_attribute_t *attr)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_ROUTE_ENTRY(unicast_route_entry);
 
@@ -271,9 +271,9 @@ sai_status_t  redis_get_route_attribute(
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     VALIDATE_ROUTE_ENTRY(unicast_route_entry);
 

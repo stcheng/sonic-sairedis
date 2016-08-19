@@ -322,9 +322,9 @@ void redis_disconnect_switch(void)
 sai_status_t  redis_set_switch_attribute(
     _In_ const sai_attribute_t *attr)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_SWITCH,
@@ -350,9 +350,9 @@ sai_status_t  redis_get_switch_attribute(
     _In_ sai_uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
-    SWSS_LOG_ENTER();
-
     std::lock_guard<std::mutex> lock(g_apimutex);
+
+    SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_SWITCH,
