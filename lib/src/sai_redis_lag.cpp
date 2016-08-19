@@ -300,6 +300,9 @@ sai_status_t redis_create_lag_member(
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
+    // TODO check if this port actually exists
+    // TODO check if this port is not already a member in this LAG, can it be duplicated?
+
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_LAG_MEMBER,
             lag_member_id,
