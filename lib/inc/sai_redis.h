@@ -24,6 +24,7 @@ extern "C" {
 #include "swss/logger.h"
 
 // local redis state
+extern std::set<sai_object_id_t>        local_next_hops_set;
 extern std::set<sai_object_id_t>        local_router_interfaces_set;
 extern std::set<std::string>            local_neighbor_entries_set;
 extern std::set<std::string>            local_route_entries_set;
