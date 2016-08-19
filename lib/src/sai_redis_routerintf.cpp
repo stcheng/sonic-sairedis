@@ -101,7 +101,7 @@ sai_status_t redis_create_router_interface(
 
     // TODO make this as function like isValidVirtualRouter()
     if ((local_virtual_routers_set.find(vr_id) == local_virtual_routers_set.end()) &&
-        (local_default_virtual_router != vr_id))
+        (local_default_virtual_router_id != vr_id))
     {
         SWSS_LOG_ERROR("virtual router %llx is missing", vr_id);
 

@@ -3,6 +3,8 @@
 
 #include "selectableevent.h"
 
+sai_object_id_t local_cpu_port_id = SAI_NULL_OBJECT_ID;
+
 // if we will not get response in 60 seconds when
 // notify syncd to compile new state or to switch
 // to compiled state, then there is something wrong
@@ -110,6 +112,10 @@ sai_status_t notify_syncd(const std::string &op)
 
 void clear_local_state()
 {
+    local_lags_set.clear();
+
+    local_lag_members_set.clear();
+
     local_next_hop_groups_set.clear();
 
     local_next_hops_set.clear();
@@ -123,6 +129,8 @@ void clear_local_state()
     local_virtual_routers_set.clear();
 
     local_default_virtual_router_id = SAI_NULL_OBJECT_ID;
+
+    local_cpu_port_id = SAI_NULL_OBJECT_ID;
 }
 
 /**
@@ -366,6 +374,34 @@ sai_status_t  redis_get_switch_attribute(
 
     if (status == SAI_STATUS_SUCCESS)
     {
+        // TODO should we obtain this right away in switch init ? same for port ids ? and all default objects ?
+        const sai_attribute_t* attr_cpu_port_id = redis_get_attribute_by_id(SAI_SWITCH_ATTR_CPU_PORT, attr_count, attr_list);
+
+        // cpu port ID can be only obtained by sai GET switch API
+        // and this port can't be removed from the switch
+
+        if (attr_cpu_port_id != NULL)
+        {
+            sai_object_id_t cpu_port_id = attr_cpu_port_id->value.oid;
+
+            if (local_cpu_port_id != SAI_NULL_OBJECT_ID)
+            {
+                if (local_cpu_port_id != cpu_port_id)
+                {
+                    // user requested to get cpu port id again
+                    // just sanity check if id is different, then there is bug in code
+
+                    SWSS_LOG_ERROR("previous cpu port id %llx, current cpu port id %llx", local_cpu_port_id, cpu_port_id);
+
+                    return SAI_STATUS_FAILURE;
+                }
+            }
+
+            local_cpu_port_id = cpu_port_id;
+
+            SWSS_LOG_INFO("got cpu port ID %llx via get api", local_cpu_port_id);
+        }
+
         const sai_attribute_t* attr_def_vr_id = redis_get_attribute_by_id(SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID, attr_count, attr_list);
 
         // default virtual router ID can be only obtained by sai GET switch API
@@ -373,27 +409,25 @@ sai_status_t  redis_get_switch_attribute(
 
         if (attr_def_vr_id == NULL)
         {
-            return status;
-        }
+            sai_object_id_t vr_id = attr_def_vr_id->value.oid;
 
-        sai_object_id_t vr_id = attr_def_vr_id->value.oid;
-
-        if (local_default_virtual_router_id != SAI_NULL_OBJECT_ID)
-        {
-            if (local_default_virtual_router_id != vr_id)
+            if (local_default_virtual_router_id != SAI_NULL_OBJECT_ID)
             {
-                // user requested to get default virtual router id again
-                // just sanity check if id is different, then there is bug in code
+                if (local_default_virtual_router_id != vr_id)
+                {
+                    // user requested to get default virtual router id again
+                    // just sanity check if id is different, then there is bug in code
 
-                SWSS_LOG_ERROR("previous default VR id %llx, current default VR id %llx", local_default_virtual_router_id, vr_id);
+                    SWSS_LOG_ERROR("previous default VR id %llx, current default VR id %llx", local_default_virtual_router_id, vr_id);
 
-                return SAI_STATUS_FAILURE;
+                    return SAI_STATUS_FAILURE;
+                }
             }
+
+            local_default_virtual_router_id = vr_id;
+
+            SWSS_LOG_INFO("got default virtual router ID %llx via get api", local_default_virtual_router_id);
         }
-
-        local_default_virtual_router_id = vr_id;
-
-        SWSS_LOG_INFO("got default virtual router ID %llx via get api", local_default_virtual_router_id);
     }
 
     return status;

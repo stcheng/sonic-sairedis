@@ -97,7 +97,7 @@ sai_status_t redis_create_next_hop_group(
 
         if (local_next_hops_set.find(next_hop_id) == local_next_hops_set.end())
         {
-            SWSS_LOG_ERROR("next hop id %llx not found", next_hop_id);
+            SWSS_LOG_ERROR("next hop %llx not found", next_hop_id);
 
             return SAI_STATUS_INVALID_PARAMETER;
         }
@@ -146,7 +146,7 @@ sai_status_t redis_remove_next_hop_group(
 
     if (local_next_hop_groups_set.find(next_hop_group_id) == local_next_hop_groups_set.end())
     {
-        SWSS_LOG_ERROR("next hop group id %llx is missing", next_hop_group_id);
+        SWSS_LOG_ERROR("next hop group %llx is missing", next_hop_group_id);
 
         return SAI_STATUS_INVALID_PARAMETER;
     }
