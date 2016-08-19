@@ -1,6 +1,5 @@
 #include "sai_redis.h"
 
-// TODO must be cleared on reinitialize
 std::set<sai_object_id_t> local_router_interfaces_set;
 
 const sai_attribute_t* redis_get_attribute_by_id(

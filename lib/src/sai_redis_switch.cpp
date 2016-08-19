@@ -116,8 +116,9 @@ void clear_local_state()
 
     local_route_entries_set.clear();
 
-    // TODO set default virtual router to zero
-    // local_virtual_routers_set.clear();
+    local_virtual_routers_set.clear();
+
+    local_default_virtual_router_id = SAI_NULL_OBJECT_ID;
 }
 
 /**
@@ -232,6 +233,8 @@ sai_status_t redis_initialize_switch(
 void  redis_shutdown_switch(
     _In_ bool warm_restart_hint)
 {
+    std::lock_guard<std::mutex> apilock(g_apimutex);
+
     std::lock_guard<std::mutex> lock(g_mutex);
 
     SWSS_LOG_ENTER();
@@ -274,6 +277,8 @@ sai_status_t redis_connect_switch(
     _In_reads_z_(SAI_MAX_HARDWARE_ID_LEN) char* switch_hardware_id,
     _In_ sai_switch_notification_t* switch_notifications)
 {
+    std::lock_guard<std::mutex> apilock(g_apimutex);
+
     std::lock_guard<std::mutex> lock(g_mutex);
 
     SWSS_LOG_ENTER();
@@ -294,6 +299,8 @@ sai_status_t redis_connect_switch(
  */
 void redis_disconnect_switch(void)
 {
+    std::lock_guard<std::mutex> apilock(g_apimutex);
+
     std::lock_guard<std::mutex> lock(g_mutex);
 
     SWSS_LOG_ENTER();
@@ -316,6 +323,8 @@ sai_status_t  redis_set_switch_attribute(
     _In_ const sai_attribute_t *attr)
 {
     SWSS_LOG_ENTER();
+
+    std::lock_guard<std::mutex> lock(g_apimutex);
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_SWITCH,
@@ -343,11 +352,45 @@ sai_status_t  redis_get_switch_attribute(
 {
     SWSS_LOG_ENTER();
 
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_SWITCH,
             (sai_object_id_t)0,
             attr_count,
             attr_list);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        const sai_attribute_t* attr_def_vr_id = redis_get_attribute_by_id(SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID, attr_count, attr_list);
+
+        // default virtual router ID can be only obtained by sai GET switch API
+        // and this router can't be removed from the switch
+
+        if (attr_def_vr_id == NULL)
+        {
+            return status;
+        }
+
+        sai_object_id_t vr_id = attr_def_vr_id->value.oid;
+
+        if (local_default_virtual_router_id != SAI_NULL_OBJECT_ID)
+        {
+            if (local_default_virtual_router_id != vr_id)
+            {
+                // user requested to get default virtual router id again
+                // just sanity check if id is different, then there is bug in code
+
+                SWSS_LOG_ERROR("previous default VR id %llx, current default VR id %llx", local_default_virtual_router_id, vr_id);
+
+                return SAI_STATUS_FAILURE;
+            }
+        }
+
+        local_default_virtual_router_id = vr_id;
+
+        SWSS_LOG_INFO("got default virtual router ID %llx via get api", local_default_virtual_router_id);
+    }
 
     return status;
 }
