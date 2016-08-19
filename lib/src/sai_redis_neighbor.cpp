@@ -89,7 +89,7 @@ bool redis_validate_contains_attribute(
  *
  * Note: IP address expected in Network Byte Order.
  */
-sai_status_t  redis_create_neighbor_entry(
+sai_status_t redis_create_neighbor_entry(
     _In_ const sai_neighbor_entry_t* neighbor_entry,
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
@@ -165,7 +165,7 @@ sai_status_t  redis_create_neighbor_entry(
  *
  * Note: IP address expected in Network Byte Order.
  */
-sai_status_t  redis_remove_neighbor_entry(
+sai_status_t redis_remove_neighbor_entry(
     _In_ const sai_neighbor_entry_t* neighbor_entry)
 {
     std::lock_guard<std::mutex> lock(g_apimutex);
@@ -183,6 +183,8 @@ sai_status_t  redis_remove_neighbor_entry(
 
         return SAI_STATUS_INVALID_PARAMETER;
     }
+
+    // TODO check dependencies if it is safe to remove
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_NEIGHBOR,
@@ -212,7 +214,7 @@ sai_status_t  redis_remove_neighbor_entry(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_neighbor_attribute(
+sai_status_t redis_set_neighbor_attribute(
     _In_ const sai_neighbor_entry_t* neighbor_entry,
     _In_ const sai_attribute_t *attr)
 {
@@ -278,7 +280,7 @@ sai_status_t  redis_set_neighbor_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_neighbor_attribute(
+sai_status_t redis_get_neighbor_attribute(
     _In_ const sai_neighbor_entry_t* neighbor_entry,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
@@ -341,7 +343,7 @@ sai_status_t redis_remove_all_neighbor_entries(void)
 }
 
 /**
- *  @brief neighbor table methods, retrieved via sai_api_query()
+ * @brief neighbor table methods, retrieved via sai_api_query()
  */
 const sai_neighbor_api_t redis_neighbor_api = {
     redis_create_neighbor_entry,

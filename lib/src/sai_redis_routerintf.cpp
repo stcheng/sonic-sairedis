@@ -83,6 +83,13 @@ sai_status_t redis_create_router_interface(
 
     sai_object_id_t vr_id = attr_vr_id->value.oid;
 
+    if (vr_id == SAI_NULL_OBJECT_ID)
+    {
+        SWSS_LOG_ERROR("virtual router id is zero");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     sai_object_type_t type = sai_object_type_query(vr_id);
 
     if (type != SAI_OBJECT_TYPE_VIRTUAL_ROUTER)
@@ -92,7 +99,14 @@ sai_status_t redis_create_router_interface(
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
-    // TODO check is this id exists on virtual router list (it can be user created or default virtual router)
+    // TODO make this as function like isValidVirtualRouter()
+    if ((local_virtual_routers_set.find(vr_id) == local_virtual_routers_set.end()) &&
+        (local_default_virtual_router != vr_id))
+    {
+        SWSS_LOG_ERROR("virtual router %llx is missing", vr_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     if (attr_type == NULL)
     {
@@ -235,7 +249,7 @@ sai_status_t redis_remove_router_interface(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_router_interface_attribute(
+sai_status_t redis_set_router_interface_attribute(
     _In_ sai_object_id_t rif_id,
     _In_ const sai_attribute_t *attr)
 {
@@ -288,7 +302,7 @@ sai_status_t  redis_set_router_interface_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_router_interface_attribute(
+sai_status_t redis_get_router_interface_attribute(
     _In_ sai_object_id_t rif_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
@@ -328,7 +342,7 @@ sai_status_t  redis_get_router_interface_attribute(
 }
 
 /**
- *  @brief Routing interface methods table retrieved with sai_api_query()
+ * @brief Routing interface methods table retrieved with sai_api_query()
  */
 const sai_router_interface_api_t redis_router_interface_api = {
     redis_create_router_interface,

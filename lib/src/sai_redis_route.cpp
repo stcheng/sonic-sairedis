@@ -34,14 +34,14 @@ sai_status_t redis_validate_route_entry(
 
     // TODO check if ip address is correct (as spearate api)
 
-    // TODO virtual router also can be default virtual router ID which can be obtained via get api
-    // we can have an separate api like "isValidVirtualRouterId" etc ...
-    //if (local_virtual_routers_set.find(rif_id) == local_virtual_routers_set.end())
-    //{
-    //    SWSS_LOG_ERROR("virtual router id %llx is does not exists", rif_id);
+    // TODO make this as function like isValidVirtualRouterId()
+    if ((local_virtual_routers_set.find(vr_id) == local_virtual_routers_set.end()) &&
+        (local_default_virtual_router != vr_id))
+    {
+        SWSS_LOG_ERROR("virtual router %llx is missing", vr_id);
 
-    //    return SAI_STATUS_INVALID_PARAMETER;
-    //}
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     return SAI_STATUS_SUCCESS;
 }
@@ -66,7 +66,7 @@ sai_status_t redis_validate_route_entry(
  * Note: IP prefix/mask expected in Network Byte Order.
  *
  */
-sai_status_t  redis_create_route(
+sai_status_t redis_create_route(
     _In_ const sai_unicast_route_entry_t* unicast_route_entry,
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
@@ -96,16 +96,39 @@ sai_status_t  redis_create_route(
         switch (type)
         {
             case SAI_OBJECT_TYPE_NEXT_HOP:
-                // TODO check if next hop exists
+
+                if (local_next_hops_set.find(next_hop) == local_next_hops_set.end())
+                {
+                    SWSS_LOG_ERROR("next hop %llx is missing", next_hop);
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+
                 break;
 
             case SAI_OBJECT_TYPE_NEXT_HOP_GROUP:
-                // TODO check if next hop group exists
+
+                if (local_next_hop_groups_set.find(next_hop) == local_next_hop_groups_set.end())
+                {
+                    SWSS_LOG_ERROR("next hop group %llx is missing", next_hop);
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+
                 break;
 
             case SAI_OBJECT_TYPE_ROUTER_INTERFACE:
-                // TODO check if router interface exists
+
+                if (local_router_interfaces_set.find(next_hop) == local_router_interfaces_set.end())
+                {
+                    SWSS_LOG_ERROR("router interface %llx is missing", next_hop);
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+
                 break;
+
+            // TODO it may be also a CPU port in some case
 
             default:
 
@@ -156,7 +179,7 @@ sai_status_t  redis_create_route(
  *
  * Note: IP prefix/mask expected in Network Byte Order.
  */
-sai_status_t  redis_remove_route(
+sai_status_t redis_remove_route(
     _In_ const sai_unicast_route_entry_t* unicast_route_entry)
 {
     std::lock_guard<std::mutex> lock(g_apimutex);
@@ -174,6 +197,8 @@ sai_status_t  redis_remove_route(
 
         return SAI_STATUS_INVALID_PARAMETER;
     }
+
+    // since route is a leaf, it is always safe to remove route
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_ROUTE,
@@ -203,7 +228,7 @@ sai_status_t  redis_remove_route(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_route_attribute(
+sai_status_t redis_set_route_attribute(
     _In_ const sai_unicast_route_entry_t* unicast_route_entry,
     _In_ const sai_attribute_t *attr)
 {
@@ -266,7 +291,7 @@ sai_status_t  redis_set_route_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_route_attribute(
+sai_status_t redis_get_route_attribute(
     _In_ const sai_unicast_route_entry_t* unicast_route_entry,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
@@ -311,7 +336,7 @@ sai_status_t  redis_get_route_attribute(
 }
 
 /**
- *  @brief Router entry methods table retrieved with sai_api_query()
+ * @brief Router entry methods table retrieved with sai_api_query()
  */
 const sai_route_api_t redis_route_api = {
     redis_create_route,
