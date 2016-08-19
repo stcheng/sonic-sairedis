@@ -26,6 +26,7 @@ extern "C" {
 // local redis state
 extern std::set<sai_object_id_t>        local_router_interfaces_set;
 extern std::set<std::string>            local_neighbor_entries_set;
+extern std::set<std::string>            local_route_entries_set;
 
 // other global declarations
 
@@ -77,6 +78,16 @@ extern const sai_wred_api_t             redis_wred_api;
 extern sai_switch_notification_t redis_switch_notifications;
 
 #define UNREFERENCED_PARAMETER(X)
+
+bool redis_validate_contains_attribute(
+    _In_ sai_attr_id_t required_id,
+    _In_ uint32_t attr_count,
+    _In_ const sai_attribute_t *attr_list);
+
+const sai_attribute_t* redis_get_attribute_by_id(
+    _In_ sai_attr_id_t id,
+    _In_ uint32_t attr_count,
+    _In_ const sai_attribute_t *attr_list);
 
 sai_object_id_t redis_create_virtual_object_id(
         _In_ sai_object_type_t object_type);

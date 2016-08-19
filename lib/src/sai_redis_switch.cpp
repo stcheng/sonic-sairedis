@@ -113,6 +113,11 @@ void clear_local_state()
     local_router_interfaces_set.clear();
 
     local_neighbor_entries_set.clear();
+
+    local_route_entries_set.clear();
+
+    // TODO set default virtual router to zero
+    // local_virtual_routers_set.clear();
 }
 
 /**
@@ -136,6 +141,8 @@ sai_status_t redis_initialize_switch(
     _In_reads_opt_z_(SAI_MAX_FIRMWARE_PATH_NAME_LEN) char* firmware_path_name,
     _In_ sai_switch_notification_t* switch_notifications)
 {
+    std::lock_guard<std::mutex> apilock(g_apimutex);
+
     std::lock_guard<std::mutex> lock(g_mutex);
 
     SWSS_LOG_ENTER();

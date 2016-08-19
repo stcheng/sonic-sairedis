@@ -146,7 +146,7 @@ sai_status_t  redis_create_neighbor_entry(
 
         local_neighbor_entries_set.insert(str_neighbor_entry);
 
-        // TODO increase router interface reference count to prevend delete
+        // TODO increase router interface reference count to prevent delete
     }
 
     return status;
@@ -227,6 +227,24 @@ sai_status_t  redis_set_neighbor_attribute(
         SWSS_LOG_ERROR("attribute parameter is NULL");
 
         return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO this attribute id validation should be automatic
+    // and generic when we will have SAI headers metadata
+    switch (attr->id)
+    {
+        case SAI_NEIGHBOR_ATTR_DST_MAC_ADDRESS:
+        case SAI_NEIGHBOR_ATTR_PACKET_ACTION:
+        case SAI_NEIGHBOR_ATTR_NO_HOST_ROUTE:
+        case SAI_NEIGHBOR_ATTR_META_DATA:
+            // ok;
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("set attribute id %d is not allowed", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
     }
 
     std::string str_neighbor_entry;
