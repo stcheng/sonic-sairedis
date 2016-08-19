@@ -17,7 +17,7 @@ std::set<sai_object_id_t> local_next_hops_set;
  *
  * Note: IP address expected in Network Byte Order.
  */
-sai_status_t  redis_create_next_hop(
+sai_status_t redis_create_next_hop(
     _Out_ sai_object_id_t* next_hop_id,
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
@@ -120,7 +120,7 @@ sai_status_t  redis_create_next_hop(
 
     if (attr_rif_id == NULL)
     {
-        SWSS_LOG_ERROR("missing type attribute");
+        SWSS_LOG_ERROR("missing router interface id attribute");
 
         return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
     }
@@ -163,7 +163,7 @@ sai_status_t  redis_create_next_hop(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_remove_next_hop(
+sai_status_t redis_remove_next_hop(
     _In_ sai_object_id_t next_hop_id)
 {
     std::lock_guard<std::mutex> lock(g_apimutex);
@@ -206,7 +206,7 @@ sai_status_t  redis_remove_next_hop(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_next_hop_attribute(
+sai_status_t redis_set_next_hop_attribute(
     _In_ sai_object_id_t next_hop_id,
     _In_ const sai_attribute_t *attr)
 {
@@ -259,7 +259,7 @@ sai_status_t  redis_set_next_hop_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_next_hop_attribute(
+sai_status_t redis_get_next_hop_attribute(
     _In_ sai_object_id_t next_hop_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
@@ -320,7 +320,7 @@ sai_status_t  redis_get_next_hop_attribute(
 }
 
 /**
- *  @brief Next Hop methods table retrieved with sai_api_query()
+ * @brief Next Hop methods table retrieved with sai_api_query()
  */
 const sai_next_hop_api_t redis_next_hop_api = {
     redis_create_next_hop,

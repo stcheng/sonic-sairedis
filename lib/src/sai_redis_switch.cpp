@@ -110,6 +110,8 @@ sai_status_t notify_syncd(const std::string &op)
 
 void clear_local_state()
 {
+    local_next_hop_groups_set.clear();
+
     local_next_hops_set.clear();
 
     local_router_interfaces_set.clear();
