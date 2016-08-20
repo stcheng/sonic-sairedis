@@ -79,6 +79,13 @@ sai_status_t redis_remove_vlan(
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
+    if (local_vlans_set.find(vlan_id) == local_vlans_set.end())
+    {
+        SWSS_LOG_ERROR("vlan %d is missing", vlan_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     // TODO check if it is safe to remove vlan:
     // need to check: vlan members, FDB, router_interface, port?
 

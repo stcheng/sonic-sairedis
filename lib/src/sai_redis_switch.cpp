@@ -1,7 +1,7 @@
 #include "sai_redis.h"
 #include <thread>
 
-#include "selectableevent.h"
+#include "swss/selectableevent.h"
 
 sai_object_id_t local_cpu_port_id = SAI_NULL_OBJECT_ID;
 
