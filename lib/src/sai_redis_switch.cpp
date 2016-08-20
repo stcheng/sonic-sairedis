@@ -131,6 +131,14 @@ void clear_local_state()
     local_default_virtual_router_id = SAI_NULL_OBJECT_ID;
 
     local_cpu_port_id = SAI_NULL_OBJECT_ID;
+
+    local_vlans_set.clear();
+
+    local_vlan_members_set.clear();
+
+    local_vlans_set.insert(DEFAULT_VLAN_NUMBER);
+
+    // TODO populate vlan 1 members via ports ? get from switch?
 }
 
 /**

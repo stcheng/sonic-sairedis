@@ -23,6 +23,8 @@ extern "C" {
 #include "swss/select.h"
 #include "swss/logger.h"
 
+#define DEFAULT_VLAN_NUMBER 1
+
 // local redis state
 extern std::set<sai_object_id_t>        local_next_hops_set;
 extern std::set<sai_object_id_t>        local_router_interfaces_set;
@@ -33,6 +35,9 @@ extern std::set<std::string>            local_neighbor_entries_set;
 extern std::set<std::string>            local_route_entries_set;
 extern std::set<sai_object_id_t>        local_virtual_routers_set;
 extern sai_object_id_t                  local_default_virtual_router_id;
+extern sai_object_id_t                  local_cpu_port_id;
+extern std::set<sai_vlan_id_t>          local_vlans_set;
+extern std::set<sai_object_id_t>        local_vlan_members_set;
 
 // other global declarations
 

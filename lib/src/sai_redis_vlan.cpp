@@ -1,5 +1,11 @@
 #include "sai_redis.h"
 
+std::set<sai_vlan_id_t> local_vlans_set;
+std::set<sai_object_id_t> local_vlan_members_set;
+
+#define MINIMUM_VLAN_NUMBER 1
+#define MAXIMUM_VLAN_NUMBER 4094
+
 /**
  * Routine Description:
  *    @brief Create a VLAN
@@ -11,14 +17,37 @@
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_create_vlan(
+sai_status_t redis_create_vlan(
     _In_ sai_vlan_id_t vlan_id)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    if (local_vlans_set.find(vlan_id) != local_vlans_set.end())
+    {
+        SWSS_LOG_ERROR("vlan %d already exists", vlan_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (vlan_id < MINIMUM_VLAN_NUMBER || vlan_id > MAXIMUM_VLAN_NUMBER)
+    {
+        SWSS_LOG_ERROR("invalid vlan number %d", vlan_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_create_vlan(
             SAI_OBJECT_TYPE_VLAN,
             vlan_id);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("inserting vlan %d to local state", vlan_id);
+
+        local_vlans_set.insert(vlan_id);
+    }
 
     return status;
 }
@@ -37,11 +66,32 @@ sai_status_t  redis_create_vlan(
 sai_status_t redis_remove_vlan(
     _In_ sai_vlan_id_t vlan_id)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    // TODO can vlan 1 be removed at all ? or it must exist without members ?
+
+    if (vlan_id == DEFAULT_VLAN_NUMBER)
+    {
+        SWSS_LOG_ERROR("default vlan %d can't be removed", vlan_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO check if it is safe to remove vlan:
+    // need to check: vlan members, FDB, router_interface, port?
 
     sai_status_t status = redis_generic_remove_vlan(
             SAI_OBJECT_TYPE_VLAN,
             vlan_id);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("erasing vlan %d from local state", vlan_id);
+
+        local_vlans_set.erase(vlan_id);
+    }
 
     return status;
 }
@@ -58,11 +108,43 @@ sai_status_t redis_remove_vlan(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_vlan_attribute(
+sai_status_t redis_set_vlan_attribute(
     _In_ sai_vlan_id_t vlan_id,
     _In_ const sai_attribute_t *attr)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    if (attr == NULL)
+    {
+        SWSS_LOG_ERROR("attribute parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_vlans_set.find(vlan_id) == local_vlans_set.end())
+    {
+        SWSS_LOG_ERROR("vlan %d is missing", vlan_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (attr->id)
+    {
+        case SAI_VLAN_ATTR_MAX_LEARNED_ADDRESSES:
+        case SAI_VLAN_ATTR_STP_INSTANCE:
+        case SAI_VLAN_ATTR_LEARN_DISABLE:
+        case SAI_VLAN_ATTR_META_DATA:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("setting attribute id %d is not supported", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_set_vlan(
             SAI_OBJECT_TYPE_VLAN,
@@ -85,12 +167,71 @@ sai_status_t  redis_set_vlan_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_vlan_attribute(
+sai_status_t redis_get_vlan_attribute(
     _In_ sai_vlan_id_t vlan_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_vlans_set.find(vlan_id) == local_vlans_set.end())
+    {
+        SWSS_LOG_ERROR("vlan %d is missing", vlan_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attribute_t* attr = &attr_list[i];
+
+        switch (attr->id)
+        {
+            case SAI_VLAN_ATTR_MEMBER_LIST:
+
+                {
+                    sai_object_list_t vlan_member_list = attr->value.objlist;
+
+                    if (vlan_member_list.list == NULL)
+                    {
+                        SWSS_LOG_ERROR("vlan member list is NULL");
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                    }
+                }
+
+                break;
+
+            case SAI_VLAN_ATTR_MAX_LEARNED_ADDRESSES:
+            case SAI_VLAN_ATTR_STP_INSTANCE:
+            case SAI_VLAN_ATTR_LEARN_DISABLE:
+            case SAI_VLAN_ATTR_META_DATA:
+                // ok
+                break;
+
+            default:
+
+                SWSS_LOG_ERROR("getting attribute id %d is not supported", attr->id);
+
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
+    }
 
     sai_status_t status = redis_generic_get_vlan(
             SAI_OBJECT_TYPE_VLAN,
@@ -114,7 +255,12 @@ sai_status_t redis_create_vlan_member(
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    // TODO if vlanmember can be a LGA and a PORT and the same port
+    // can be lag member is that a conflict ? or is it allowed?
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_VLAN_MEMBER,
@@ -134,7 +280,12 @@ sai_status_t redis_create_vlan_member(
 sai_status_t redis_remove_vlan_member(
     _In_ sai_object_id_t vlan_member_id)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    // TODO check if vlan member can be removed
+    // vlan member is leaf so it should be always possible to remove it
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_VLAN_MEMBER,
@@ -150,10 +301,12 @@ sai_status_t redis_remove_vlan_member(
     \return Success: SAI_STATUS_SUCCESS
             Failure: Failure status code on error
 */
-sai_status_t  redis_set_vlan_member_attribute(
-    _In_ sai_object_id_t  vlan_member_id,
+sai_status_t redis_set_vlan_member_attribute(
+    _In_ sai_object_id_t vlan_member_id,
     _In_ const sai_attribute_t *attr)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
@@ -173,11 +326,13 @@ sai_status_t  redis_set_vlan_member_attribute(
             Failure: Failure status code on error
 */
 
-sai_status_t  redis_get_vlan_member_attribute(
+sai_status_t redis_get_vlan_member_attribute(
     _In_ sai_object_id_t vlan_member_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
@@ -188,7 +343,6 @@ sai_status_t  redis_get_vlan_member_attribute(
 
     return status;
 }
-
 
 /**
  * Routine Description:
@@ -204,13 +358,17 @@ sai_status_t  redis_get_vlan_member_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_vlan_stats(
+sai_status_t redis_get_vlan_stats(
     _In_ sai_vlan_id_t vlan_id,
     _In_ const sai_vlan_stat_counter_t *counter_ids,
     _In_ uint32_t number_of_counters,
     _Out_ uint64_t* counters)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    SWSS_LOG_ERROR("not implemented");
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
@@ -228,12 +386,16 @@ sai_status_t  redis_get_vlan_stats(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_clear_vlan_stats(
+sai_status_t redis_clear_vlan_stats(
     _In_ sai_vlan_id_t vlan_id,
     _In_ const sai_vlan_stat_counter_t *counter_ids,
     _In_ uint32_t number_of_counters)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    SWSS_LOG_ERROR("not implemented");
 
     return SAI_STATUS_NOT_IMPLEMENTED;
 }
