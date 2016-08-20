@@ -134,6 +134,7 @@ sai_status_t redis_set_lag_attribute(
 
             return SAI_STATUS_INVALID_PARAMETER;
     }
+
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_LAG,
             lag_id,
