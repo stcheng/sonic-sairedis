@@ -65,9 +65,38 @@ sai_status_t internal_redis_generic_create(
 
     SWSS_LOG_ENTER();
 
+    if (attr_count > 0 && attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // check for duplicated id entries on attribute list
+    // this needs to be checked only on create API
+    // since set always use one attribute, and get api
+    // is not making any changes so attributes can be
+    // duplicated
+
+    std::set<sai_attr_id_t> attr_ids;
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attr_id_t id = attr_list[i].id;
+
+        if (attr_ids.find(id) != attr_ids.end())
+        {
+            SWSS_LOG_ERROR("duplicated attribute id %d on attribute list", id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+        }
+
+        attr_ids.insert(id);
+    }
+
     std::vector<swss::FieldValueTuple> entry = SaiAttributeList::serialize_attr_list(
-            object_type, 
-            attr_count, 
+            object_type,
+            attr_count,
             attr_list,
             false);
 
@@ -119,13 +148,6 @@ sai_status_t redis_generic_create(
     if (object_id == NULL)
     {
         SWSS_LOG_ERROR("object id pointer is NULL");
-
-        return SAI_STATUS_INVALID_PARAMETER;
-    }
-
-    if (attr_list == NULL)
-    {
-        SWSS_LOG_ERROR("attribute list is NULL");
 
         return SAI_STATUS_INVALID_PARAMETER;
     }
