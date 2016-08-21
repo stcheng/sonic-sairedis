@@ -38,6 +38,9 @@ extern sai_object_id_t                  local_default_virtual_router_id;
 extern sai_object_id_t                  local_cpu_port_id;
 extern std::set<sai_vlan_id_t>          local_vlans_set;
 extern std::set<sai_object_id_t>        local_vlan_members_set;
+extern std::set<sai_object_id_t>        local_tunnel_maps_set;
+extern std::set<sai_object_id_t>        local_tunnels_set;
+extern std::set<sai_object_id_t>        local_tunnel_term_table_entries_set;
 
 // other global declarations
 

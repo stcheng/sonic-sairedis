@@ -112,33 +112,30 @@ sai_status_t notify_syncd(const std::string &op)
 
 void clear_local_state()
 {
-    local_lags_set.clear();
-
     local_lag_members_set.clear();
-
-    local_next_hop_groups_set.clear();
-
-    local_next_hops_set.clear();
-
-    local_router_interfaces_set.clear();
-
+    local_lags_set.clear();
     local_neighbor_entries_set.clear();
-
+    local_next_hop_groups_set.clear();
+    local_next_hops_set.clear();
     local_route_entries_set.clear();
-
+    local_router_interfaces_set.clear();
+    local_tunnel_maps_set.clear();
+    local_tunnels_set.clear();
+    local_tunnel_term_table_entries_set.clear();
     local_virtual_routers_set.clear();
-
-    local_default_virtual_router_id = SAI_NULL_OBJECT_ID;
-
-    local_cpu_port_id = SAI_NULL_OBJECT_ID;
-
+    local_vlan_members_set.clear();
     local_vlans_set.clear();
 
-    local_vlan_members_set.clear();
+    // populate default objects
 
     local_vlans_set.insert(DEFAULT_VLAN_NUMBER);
 
     // TODO populate vlan 1 members via ports ? get from switch?
+    // same from default router and cou port id should be obtained from switch
+
+    local_default_virtual_router_id = SAI_NULL_OBJECT_ID;
+
+    local_cpu_port_id = SAI_NULL_OBJECT_ID;
 }
 
 /**

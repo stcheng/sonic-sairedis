@@ -1,5 +1,9 @@
 #include "sai_redis.h"
 
+std::set<sai_object_id_t> local_tunnel_maps_set;
+std::set<sai_object_id_t> local_tunnels_set;
+std::set<sai_object_id_t> local_tunnel_term_table_entries_set;
+
 /**
  * Routine Description:
  *    @brief Create tunnel map
@@ -14,11 +18,13 @@
  *            Failure status code on error
  *
  */
-sai_status_t  redis_create_tunnel_map(
+sai_status_t redis_create_tunnel_map(
     _Out_ sai_object_id_t* tunnel_map_id,
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
@@ -42,9 +48,11 @@ sai_status_t  redis_create_tunnel_map(
  *            Failure status code on error
  *
  */
-sai_status_t  redis_remove_tunnel_map(
+sai_status_t redis_remove_tunnel_map(
     _In_ sai_object_id_t tunnel_map_id)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
@@ -66,10 +74,12 @@ sai_status_t  redis_remove_tunnel_map(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_tunnel_map_attribute(
-    _In_ sai_object_id_t  tunnel_map_id,
+sai_status_t redis_set_tunnel_map_attribute(
+    _In_ sai_object_id_t tunnel_map_id,
     _In_ const sai_attribute_t *attr)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
@@ -92,11 +102,13 @@ sai_status_t  redis_set_tunnel_map_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_tunnel_map_attribute(
+sai_status_t redis_get_tunnel_map_attribute(
     _In_ sai_object_id_t   tunnel_map_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
@@ -122,11 +134,13 @@ sai_status_t  redis_get_tunnel_map_attribute(
  *            Failure status code on error
  *
  */
-sai_status_t  redis_create_tunnel(
+sai_status_t redis_create_tunnel(
     _Out_ sai_object_id_t* tunnel_id,
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_create(
@@ -150,9 +164,11 @@ sai_status_t  redis_create_tunnel(
  *            Failure status code on error
  *
  */
-sai_status_t  redis_remove_tunnel(
+sai_status_t redis_remove_tunnel(
     _In_ sai_object_id_t tunnel_id)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_remove(
@@ -174,10 +190,12 @@ sai_status_t  redis_remove_tunnel(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_tunnel_attribute(
+sai_status_t redis_set_tunnel_attribute(
     _In_ sai_object_id_t tunnel_id,
     _In_ const sai_attribute_t *attr)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_set(
@@ -201,11 +219,13 @@ sai_status_t  redis_set_tunnel_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_tunnel_attribute(
-    _In_ sai_object_id_t tunnel_id, 
+sai_status_t redis_get_tunnel_attribute(
+    _In_ sai_object_id_t tunnel_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
 
     sai_status_t status = redis_generic_get(
@@ -231,18 +251,174 @@ sai_status_t  redis_get_tunnel_attribute(
  *            Failure status code on error
  *
  */
-sai_status_t  redis_create_tunnel_term_table_entry (
+sai_status_t redis_create_tunnel_term_table_entry (
     _Out_ sai_object_id_t* tunnel_term_table_entry_id,
     _In_ uint32_t attr_count,
     _In_ const sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 4)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 4");
+
+        // SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_VR_ID
+        // SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TYPE
+        // SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_DST_IP
+        // SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TUNNEL_TYPE
+        //
+        // - contitional on create depending on type
+        // SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_SRC_IP
+        // SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_ACTION_TUNNEL_ID    // TODO is this conditional param ?
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    const sai_attribute_t* attr_vr_id = redis_get_attribute_by_id(SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_VR_ID, attr_count, attr_list);
+    const sai_attribute_t* attr_type = redis_get_attribute_by_id(SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TYPE, attr_count, attr_list);
+    const sai_attribute_t* attr_dst_ip = redis_get_attribute_by_id(SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_DST_IP, attr_count, attr_list);
+    const sai_attribute_t* attr_tunnel_type = redis_get_attribute_by_id(SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TUNNEL_TYPE, attr_count, attr_list);
+
+    const sai_attribute_t* attr_src_ip = redis_get_attribute_by_id(SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_SRC_IP, attr_count, attr_list);
+    const sai_attribute_t* attr_action_tunnel_id = redis_get_attribute_by_id(SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_ACTION_TUNNEL_ID, attr_count, attr_list);
+
+    if (attr_vr_id == NULL)
+    {
+        SWSS_LOG_ERROR("missing virtual router attribute");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_object_id_t vr_id = attr_vr_id->value.oid;
+
+    // TODO make this a method, and add local virtual router to list
+    if (vr_id == SAI_NULL_OBJECT_ID)
+    {
+        SWSS_LOG_ERROR("virtual router id is zero");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if ((local_virtual_routers_set.find(vr_id) == local_router_interfaces_set.end()) &&
+        (vr_id != local_default_virtual_router_id))
+    {
+        SWSS_LOG_ERROR("virtual router %llx is missing", vr_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_type == NULL)
+    {
+        SWSS_LOG_ERROR("attribute type is missing");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_tunnel_term_table_entry_type_t type = (sai_tunnel_term_table_entry_type_t)attr_type->value.s32;
+
+    switch (type)
+    {
+        case SAI_TUNNEL_TERM_TABLE_ENTRY_P2P:
+
+            if (attr_src_ip == NULL)
+            {
+                SWSS_LOG_ERROR("attribute source ip is missing (table entry P2P)");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            break;
+
+        case SAI_TUNNEL_TERM_TABLE_ENTRY_P2MP:
+            // TODO validate, is validation needed here?
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TYPE value: %d", type);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_dst_ip == NULL)
+    {
+        SWSS_LOG_ERROR("missing destination ip attribute");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    if (attr_tunnel_type == NULL)
+    {
+        SWSS_LOG_ERROR("missing tunnel type attribute");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_tunnel_type_t tunnel_type = (sai_tunnel_type_t)attr_tunnel_type->value.s32;
+
+    // TODO an extra validation may be needed on tunnel type
+    switch (tunnel_type)
+    {
+        case SAI_TUNNEL_IPINIP:
+        case SAI_TUNNEL_IPINIP_GRE:
+        case SAI_TUNNEL_VXLAN:
+        case SAI_TUNNEL_MPLS:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid tunnel type value: %d", tunnel_type);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO check is this conditional attribute, maybe this action is only
+    // required for ip in ip tunnel types
+
+    if (attr_action_tunnel_id == NULL)
+    {
+        SWSS_LOG_ERROR("attribute action tunnel is is missing");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_object_id_t action_tunnel_id = attr_action_tunnel_id->value.oid;
+
+    if (local_tunnels_set.find(action_tunnel_id) == local_tunnels_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel %llx is missing", action_tunnel_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO additional checks may be required sinec this action tunnel id is used for
+    // decap so maybe this tunnel must have special attributes on creation set
 
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_TUNNEL_TABLE_ENTRY,
             tunnel_term_table_entry_id,
             attr_count,
             attr_list);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("inserting tunnel term table entry %llx to local state", *tunnel_term_table_entry_id);
+
+        local_tunnel_term_table_entries_set.insert(*tunnel_term_table_entry_id);
+
+        // TODO increase reference count for used object ids
+    }
 
     return status;
 }
@@ -259,14 +435,33 @@ sai_status_t  redis_create_tunnel_term_table_entry (
  *            Failure status code on error
  *
  */
-sai_status_t  redis_remove_tunnel_term_table_entry (
+sai_status_t redis_remove_tunnel_term_table_entry (
     _In_ sai_object_id_t tunnel_term_table_entry_id)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    // TODO validate if this table entry can be removed safely
+    // maybe first entire table must be removed
+
+    if (local_tunnel_term_table_entries_set.find(tunnel_term_table_entry_id) == local_tunnel_term_table_entries_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel term table entry %llx is missing", tunnel_term_table_entry_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_TUNNEL_TABLE_ENTRY,
             tunnel_term_table_entry_id);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("erasing tunnel term table entry %llx from local state", tunnel_term_table_entry_id);
+
+        local_tunnel_term_table_entries_set.erase(tunnel_term_table_entry_id);
+    }
 
     return status;
 }
@@ -283,11 +478,37 @@ sai_status_t  redis_remove_tunnel_term_table_entry (
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_tunnel_term_table_entry_attribute(
+sai_status_t redis_set_tunnel_term_table_entry_attribute(
     _In_ sai_object_id_t tunnel_term_table_entry_id,
     _In_ const sai_attribute_t *attr)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    if (attr == NULL)
+    {
+        SWSS_LOG_ERROR("attribute parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_tunnel_term_table_entries_set.find(tunnel_term_table_entry_id) == local_tunnel_term_table_entries_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel term table entry %llx is missing", tunnel_term_table_entry_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (attr->id)
+    {
+        // currently there are no attributes that can be set on table entry
+        default:
+
+            SWSS_LOG_ERROR("set attribute id %d is not allowed", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_TUNNEL_TABLE_ENTRY,
@@ -309,12 +530,65 @@ sai_status_t  redis_set_tunnel_term_table_entry_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_tunnel_term_table_entry_attribute(
+sai_status_t redis_get_tunnel_term_table_entry_attribute(
     _In_ sai_object_id_t tunnel_term_table_entry_id,
     _In_ uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
+    std::lock_guard<std::mutex> lock(g_apimutex);
+
     SWSS_LOG_ENTER();
+
+    // TODO logic in GET api can be unified for all APIs
+    // if metadata will be available
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_tunnel_term_table_entries_set.find(tunnel_term_table_entry_id) == local_tunnel_term_table_entries_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel term table entry %llx is missing", tunnel_term_table_entry_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attribute_t* attr = &attr_list[i];
+
+        switch (attr->id)
+        {
+            case SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_SRC_IP:
+
+            // TODO src ip is conditional on type: SAI_TUNNEL_TERM_TABLE_ENTRY_P2P
+            // so additional check could be added here
+
+            case SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_VR_ID:
+            case SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TYPE:
+            case SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_DST_IP:
+            case SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_TUNNEL_TYPE:
+            case SAI_TUNNEL_TERM_TABLE_ENTRY_ATTR_ACTION_TUNNEL_ID:
+                // ok
+                break;
+
+            default:
+
+                SWSS_LOG_ERROR("getting attribute id %d is not supported", attr->id);
+
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
+    }
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_TUNNEL_TABLE_ENTRY,
@@ -326,7 +600,7 @@ sai_status_t  redis_get_tunnel_term_table_entry_attribute(
 }
 
 /**
- *  @brief tunnel table methods, retrieved via sai_api_query()
+ * @brief tunnel table methods, retrieved via sai_api_query()
  */
 const sai_tunnel_api_t redis_tunnel_api = {
     redis_create_tunnel_map,
