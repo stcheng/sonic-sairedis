@@ -152,6 +152,14 @@ sai_status_t redis_generic_create(
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
+    if (object_type <= SAI_OBJECT_TYPE_NULL || object_type >= SAI_OBJECT_TYPE_MAX)
+    {
+        // this is sanity check for code bugs
+        SWSS_LOG_ERROR("trying to create invalid object type: %d", object_type);
+
+        return SAI_STATUS_FAILURE;
+    }
+
     // on create vid is put in db by syncd
     *object_id = redis_create_virtual_object_id(object_type);
 
