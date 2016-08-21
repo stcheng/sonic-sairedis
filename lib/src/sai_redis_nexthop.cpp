@@ -90,23 +90,14 @@ sai_status_t redis_create_next_hop(
                 // TODO those checks should be automated when metadata will be valid
                 sai_object_id_t tunnel_id = attr_tunnel_id->value.oid;
 
-                sai_object_type_t tunnel_type = sai_object_type_query(tunnel_id);
-
-                if (tunnel_id == SAI_NULL_OBJECT_ID)
+                if (local_tunnels_set.find(tunnel_id) == local_tunnels_set.end())
                 {
-                    SWSS_LOG_ERROR("tunnel id is zero");
+                    SWSS_LOG_ERROR("tunnel %llx is missing", tunnel_id);
 
                     return SAI_STATUS_INVALID_PARAMETER;
                 }
 
-                if (tunnel_type != SAI_OBJECT_TYPE_TUNNEL)
-                {
-                    SWSS_LOG_ERROR("tunnel id object type is not SAI_OBJECT_TYPE_TUNNEL: %d, id: %llx", tunnel_type, tunnel_id);
-
-                    return SAI_STATUS_INVALID_PARAMETER;
-                }
-
-                // TODO check if that tunnel exists in local state and it's valid
+                // TODO tunnel is existing, should be make some additional checks ? like tunnel encap type?
             }
 
             break;

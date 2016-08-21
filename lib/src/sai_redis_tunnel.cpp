@@ -143,11 +143,352 @@ sai_status_t redis_create_tunnel(
 
     SWSS_LOG_ENTER();
 
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        // SAI_TUNNEL_ATTR_TYPE
+        //
+        // - contitional on create depending on type
+        //
+        // SAI_TUNNEL_ATTR_ENCAP_TTL_VAL
+        // SAI_TUNNEL_ATTR_ENCAP_DSCP_VAL
+        // SAI_TUNNEL_ATTR_ENCAP_GRE_KEY
+        // SAI_TUNNEL_ATTR_DECAP_TTL_MODE
+        // SAI_TUNNEL_ATTR_DECAP_DSCP_MODE
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    const sai_attribute_t* attr_type = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_TYPE, attr_count, attr_list);
+
+    const sai_attribute_t* attr_underlay_interface = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_UNDERLAY_INTERFACE, attr_count, attr_list);
+    const sai_attribute_t* attr_overlay_interface = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_OVERLAY_INTERFACE, attr_count, attr_list);
+
+    const sai_attribute_t* attr_encap_ttl_mode = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_TTL_MODE, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_ttl_val = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_TTL_VAL, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_dscp_mode = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_DSCP_MODE, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_dscp_val = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_DSCP_VAL, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_gre_key_valid = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_GRE_KEY_VALID, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_gre_key = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_GRE_KEY, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_ecn_mode = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_ECN_MODE, attr_count, attr_list);
+    const sai_attribute_t* attr_encap_mappers = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_ENCAP_MAPPERS, attr_count, attr_list);
+
+    const sai_attribute_t* attr_decap_ecn_mode = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_DECAP_ECN_MODE, attr_count, attr_list);
+    const sai_attribute_t* attr_decap_mappers = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_DECAP_MAPPERS, attr_count, attr_list);
+    const sai_attribute_t* attr_decap_ttl_mode = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_DECAP_TTL_MODE, attr_count, attr_list);
+    const sai_attribute_t* attr_decap_dscp_mode = redis_get_attribute_by_id(SAI_TUNNEL_ATTR_DECAP_DSCP_MODE, attr_count, attr_list);
+
+    if (attr_type == NULL)
+    {
+        SWSS_LOG_ERROR("missing type attribute");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    // TODO should this be mandatory attrib ?
+    if (attr_underlay_interface != NULL)
+    {
+        sai_object_id_t uif_id = attr_underlay_interface->value.oid;
+
+        if (uif_id == SAI_NULL_OBJECT_ID)
+        {
+            SWSS_LOG_ERROR("underlay interface object id is NULL");
+
+            return SAI_STATUS_INVALID_PARAMETER;
+        }
+
+        // TODO validate if this interface exists and it's valid object id !
+    }
+
+    // TODO should this be mandatory attrib ?
+    if (attr_overlay_interface != NULL)
+    {
+        sai_object_id_t oif_id = attr_overlay_interface->value.oid;
+
+        if (oif_id == SAI_NULL_OBJECT_ID)
+        {
+            SWSS_LOG_ERROR("overlay interface object id is NULL");
+
+            return SAI_STATUS_INVALID_PARAMETER;
+        }
+
+        // TODO validate if this interface exists and it's valid object id !
+    }
+
+    sai_tunnel_type_t type = (sai_tunnel_type_t)attr_type->value.s32;
+
+    switch (type)
+    {
+        case SAI_TUNNEL_IPINIP:
+        case SAI_TUNNEL_IPINIP_GRE:
+        case SAI_TUNNEL_VXLAN:
+        case SAI_TUNNEL_MPLS:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid tunnel type value: %d", type);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO should underlay/overlay interface be mandatory params?
+
+    sai_tunnel_ttl_mode_t encap_ttl_mode = SAI_TUNNEL_TTL_UNIFORM_MODEL; // default value
+
+    if (attr_encap_ttl_mode != NULL)
+    {
+        encap_ttl_mode = (sai_tunnel_ttl_mode_t)attr_encap_ttl_mode->value.s32;
+    }
+
+    switch (encap_ttl_mode)
+    {
+        case SAI_TUNNEL_TTL_UNIFORM_MODEL:
+
+            break;
+
+        case SAI_TUNNEL_TTL_PIPE_MODEL:
+
+            if (attr_encap_ttl_val == NULL)
+            {
+                SWSS_LOG_ERROR("missing encap ttl val attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid encap ttl mode value specified: %d", encap_ttl_mode);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    sai_tunnel_dscp_mode_t encap_dscp_mode = SAI_TUNNEL_DSCP_UNIFORM_MODEL; // default value
+
+    if (attr_encap_dscp_mode != NULL)
+    {
+        encap_dscp_mode = (sai_tunnel_dscp_mode_t)attr_encap_dscp_mode->value.s32;
+    }
+
+    switch (encap_dscp_mode)
+    {
+        case SAI_TUNNEL_DSCP_UNIFORM_MODEL:
+
+            break;
+
+        case SAI_TUNNEL_DSCP_PIPE_MODEL:
+
+            if (attr_encap_dscp_val == NULL)
+            {
+                SWSS_LOG_ERROR("missing encap dscp val attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid encap dscp mode specified: %d", encap_dscp_mode);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    bool encap_gre_key_valid = false; // default value // TODO is false default ?
+
+    if (attr_encap_gre_key != NULL)
+    {
+        encap_gre_key_valid = attr_encap_gre_key_valid->value.booldata;
+    }
+
+    if (encap_gre_key_valid)
+    {
+       if (attr_encap_gre_key == NULL)
+       {
+            SWSS_LOG_ERROR("missing encap gre key attribute");
+
+            return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+       }
+    }
+
+    sai_tunnel_encap_ecn_mode_t encap_ecn_mode = SAI_TUNNEL_ENCAP_ECN_MODE_STANDARD;
+
+    if (attr_encap_ecn_mode != NULL)
+    {
+        encap_ecn_mode = (sai_tunnel_encap_ecn_mode_t)attr_encap_ecn_mode->value.s32;
+    }
+
+    switch (encap_ecn_mode)
+    {
+        case SAI_TUNNEL_ENCAP_ECN_MODE_STANDARD:
+
+            break;
+
+        case SAI_TUNNEL_ENCAP_ECN_MODE_USER_DEFINED:
+
+            if (attr_encap_mappers == NULL)
+            {
+                SWSS_LOG_ERROR("missing encap mappers attibute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            if (attr_encap_mappers->value.objlist.list == NULL)
+            {
+                SWSS_LOG_ERROR("encap mappers list is NULL");
+
+                return SAI_STATUS_INVALID_PARAMETER;
+            }
+
+            // TODO validate object on that list! if they exist
+            // shoud this list contain at least 1 element ? or can it be empty?
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid encap ecn mode specified: %d", encap_ecn_mode);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    sai_tunnel_decap_ecn_mode_t decap_ecn_mode = SAI_TUNNEL_DECAP_ECN_MODE_STANDARD;
+
+    if (attr_decap_ecn_mode != NULL)
+    {
+        decap_ecn_mode = (sai_tunnel_decap_ecn_mode_t)attr_decap_ecn_mode->value.s32;
+    }
+
+    switch (decap_ecn_mode)
+    {
+        case SAI_TUNNEL_DECAP_ECN_MODE_STANDARD:
+
+            break;
+
+        case SAI_TUNNEL_DECAP_ECN_MODE_COPY_FROM_OUTER:
+
+            // TODO should outer be defined now as input attribute ?
+
+            break;
+
+        case SAI_TUNNEL_DECAP_ECN_MODE_USER_DEFINED:
+
+            if (attr_decap_mappers == NULL)
+            {
+                SWSS_LOG_ERROR("missing decap mappers attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            if (attr_decap_mappers->value.objlist.list == NULL)
+            {
+                SWSS_LOG_ERROR("decap mappers list is NULL");
+
+                return SAI_STATUS_INVALID_PARAMETER;
+            }
+
+            // TODO validate object on that list! if they exist
+            // shoud this list contain at least 1 element ? or can it be empty?
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid decap ecn mode value: %d", decap_ecn_mode);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    sai_tunnel_ttl_mode_t decap_ttl_mode = SAI_TUNNEL_TTL_UNIFORM_MODEL; // default value
+
+    sai_tunnel_dscp_mode_t decap_dscp_mode = SAI_TUNNEL_DSCP_UNIFORM_MODEL; // default value
+
+    // TODO sai spec is inconsisten here, if this is mandatory attribute on some condition,
+    // then it cannot have default value, dscp mode and ttl mode
+
+    switch (type)
+    {
+        case SAI_TUNNEL_IPINIP:
+        case SAI_TUNNEL_IPINIP_GRE:
+
+            if (attr_decap_ttl_mode == NULL)
+            {
+                SWSS_LOG_ERROR("missing decap ttl mode attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            decap_ttl_mode = (sai_tunnel_ttl_mode_t)attr_decap_ttl_mode->value.s32;
+
+            if (attr_decap_dscp_mode == NULL)
+            {
+                SWSS_LOG_ERROR("missing decap dscp mode attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            decap_dscp_mode = (sai_tunnel_dscp_mode_t)attr_decap_dscp_mode->value.s32;
+
+            break;
+
+        default:
+            // ok
+            break;
+    }
+
+    switch (decap_ttl_mode)
+    {
+        case SAI_TUNNEL_TTL_UNIFORM_MODEL:
+        case SAI_TUNNEL_TTL_PIPE_MODEL:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid decap ttl mode value: %d", decap_ttl_mode);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (decap_dscp_mode)
+    {
+        case SAI_TUNNEL_DSCP_UNIFORM_MODEL:
+        case SAI_TUNNEL_DSCP_PIPE_MODEL:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid decap dscp mode value: %d", decap_dscp_mode);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_TUNNEL,
             tunnel_id,
             attr_count,
             attr_list);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("inserting tunnel %llx to local state", *tunnel_id);
+
+        local_tunnels_set.insert(*tunnel_id);
+
+        // TODO increase reference count for used object ids
+    }
 
     return status;
 }
@@ -171,9 +512,26 @@ sai_status_t redis_remove_tunnel(
 
     SWSS_LOG_ENTER();
 
+    // TODO check if tunnel can safely be removed, if it is not used
+    // in any tubbel table entry or map
+
+    if (local_tunnels_set.find(tunnel_id) == local_tunnels_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel %llx is missing", tunnel_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_TUNNEL,
             tunnel_id);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("erasing tunnel %llx from local state", tunnel_id);
+
+        local_tunnels_set.erase(tunnel_id);
+    }
 
     return status;
 }
@@ -197,6 +555,50 @@ sai_status_t redis_set_tunnel_attribute(
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr == NULL)
+    {
+        SWSS_LOG_ERROR("attribute parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_tunnels_set.find(tunnel_id) == local_tunnels_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel %llx is missing", tunnel_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (attr->id)
+    {
+        case SAI_TUNNEL_ATTR_UNDERLAY_INTERFACE:
+        case SAI_TUNNEL_ATTR_OVERLAY_INTERFACE:
+
+            // TODO validate if those can be set dynamically, and validate if interfaces exists
+
+            break;
+
+        case SAI_TUNNEL_ATTR_ENCAP_ECN_MODE:
+        case SAI_TUNNEL_ATTR_ENCAP_MAPPERS:
+
+            // TODO validate this use case
+
+            break;
+
+        case SAI_TUNNEL_ATTR_DECAP_ECN_MODE:
+        case SAI_TUNNEL_ATTR_DECAP_MAPPERS:
+
+            // TODO validate this use case
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("set attribute id %d is not allowed", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_TUNNEL,
@@ -227,6 +629,63 @@ sai_status_t redis_get_tunnel_attribute(
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_tunnels_set.find(tunnel_id) == local_tunnels_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel %llx is missing", tunnel_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO depending on configuration like ecn modes or tunnel type
+    // some attributes may be valid to get, some not
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attribute_t* attr = &attr_list[i];
+
+        switch (attr->id)
+        {
+            case SAI_TUNNEL_ATTR_TYPE:
+            case SAI_TUNNEL_ATTR_UNDERLAY_INTERFACE:
+            case SAI_TUNNEL_ATTR_OVERLAY_INTERFACE:
+            case SAI_TUNNEL_ATTR_ENCAP_SRC_IP:
+            case SAI_TUNNEL_ATTR_ENCAP_TTL_MODE:
+            case SAI_TUNNEL_ATTR_ENCAP_TTL_VAL:
+            case SAI_TUNNEL_ATTR_ENCAP_DSCP_MODE:
+            case SAI_TUNNEL_ATTR_ENCAP_DSCP_VAL:
+            case SAI_TUNNEL_ATTR_ENCAP_GRE_KEY_VALID:
+            case SAI_TUNNEL_ATTR_ENCAP_GRE_KEY:
+            case SAI_TUNNEL_ATTR_ENCAP_ECN_MODE:
+            case SAI_TUNNEL_ATTR_ENCAP_MAPPERS:
+            case SAI_TUNNEL_ATTR_DECAP_ECN_MODE:
+            case SAI_TUNNEL_ATTR_DECAP_MAPPERS:
+            case SAI_TUNNEL_ATTR_DECAP_TTL_MODE:
+            case SAI_TUNNEL_ATTR_DECAP_DSCP_MODE:
+                // ok
+                break;
+
+            default:
+
+                SWSS_LOG_ERROR("getting attribute id %d is not supported", attr->id);
+
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
+    }
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_TUNNEL,
