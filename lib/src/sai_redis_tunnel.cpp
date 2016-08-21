@@ -421,8 +421,9 @@ sai_status_t redis_create_tunnel(
             // shoud this list contain at least 1 element ? or can it be empty?
 
             {
-                sai_object_list_t list = attr_encap_mappers->value.objlist;
+                sai_object_list_t list = attr_decap_mappers->value.objlist;
 
+                // TODO make this to helper function
                 for (uint32_t i = 0; list.count; i++)
                 {
                     sai_object_id_t obj = list.list[i];
