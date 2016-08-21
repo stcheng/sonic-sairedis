@@ -86,7 +86,7 @@ sai_status_t internal_redis_generic_create(
 
         if (attr_ids.find(id) != attr_ids.end())
         {
-            SWSS_LOG_ERROR("duplicated attribute id %d on attribute list", id);
+            SWSS_LOG_ERROR("duplicated attribute id %d on attribute list for object type %d", id, object_type);
 
             return SAI_STATUS_INVALID_PARAMETER;
         }
