@@ -353,6 +353,25 @@ sai_status_t redis_create_tunnel(
 
             // TODO validate object on that list! if they exist
             // shoud this list contain at least 1 element ? or can it be empty?
+            // check for duplicates on list ?
+
+            {
+                sai_object_list_t list = attr_encap_mappers->value.objlist;
+
+                for (uint32_t i = 0; list.count; i++)
+                {
+                    sai_object_id_t obj = list.list[i];
+
+                    if (obj == SAI_NULL_OBJECT_ID)
+                    {
+                        SWSS_LOG_ERROR("encap ecn mapper list contain null object id");
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                    }
+
+                    // TODO check type of objects and if they exist
+                }
+            }
 
             break;
 
@@ -400,6 +419,24 @@ sai_status_t redis_create_tunnel(
 
             // TODO validate object on that list! if they exist
             // shoud this list contain at least 1 element ? or can it be empty?
+
+            {
+                sai_object_list_t list = attr_encap_mappers->value.objlist;
+
+                for (uint32_t i = 0; list.count; i++)
+                {
+                    sai_object_id_t obj = list.list[i];
+
+                    if (obj == SAI_NULL_OBJECT_ID)
+                    {
+                        SWSS_LOG_ERROR("decap ecn mapper list contain null object id");
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                    }
+
+                    // TODO check type of objects and if they exist
+                }
+            }
 
             break;
 
