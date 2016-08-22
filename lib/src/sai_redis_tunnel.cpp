@@ -27,11 +27,85 @@ sai_status_t redis_create_tunnel_map(
 
     SWSS_LOG_ENTER();
 
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        // SAI_TUNNEL_MAP_ATTR_TYPE
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    const sai_attribute_t* attr_type = redis_get_attribute_by_id(SAI_TUNNEL_MAP_ATTR_TYPE, attr_count, attr_list);
+    const sai_attribute_t* attr_map_to_value_list = redis_get_attribute_by_id(SAI_TUNNEL_MAP_ATTR_MAP_TO_VALUE_LIST, attr_count, attr_list);
+
+    if (attr_type == NULL)
+    {
+        SWSS_LOG_ERROR("attribute type is missing");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_tunnel_map_type_t type = (sai_tunnel_map_type_t)attr_type->value.s32;
+
+    // TODO check if additional validation is needed on those types
+    switch (type)
+    {
+        case SAI_TUNNEL_MAP_OECN_TO_UECN:
+        case SAI_TUNNEL_MAP_UECN_OECN_TO_OECN:
+        case SAI_TUNNEL_MAP_VNI_TO_VLAN_ID:
+        case SAI_TUNNEL_MAP_VLAN_ID_TO_VNI:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("invalid SAI_TUNNEL_MAP_ATTR_TYPE value: %d", type);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_map_to_value_list != NULL)
+    {
+        const sai_tunnel_map_list_t* tunnel_map_list = &attr_map_to_value_list->value.tunnelmap;
+
+        if (tunnel_map_list->list == NULL)
+        {
+            SWSS_LOG_ERROR("tunnel map list is NULL");
+
+            return SAI_STATUS_INVALID_PARAMETER;
+        }
+
+        for (uint32_t i = 0; i < tunnel_map_list->count; ++i)
+        {
+            const sai_tunnel_map_t* tunnel_map = &tunnel_map_list->list[i];
+
+            // TODO validate tunnel map
+            SWSS_LOG_DEBUG("tunnel map pointer: %llx", tunnel_map);
+        }
+    }
+
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_TUNNEL_MAP,
             tunnel_map_id,
             attr_count,
             attr_list);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("inserting tunnel map %llx to local state", *tunnel_map_id);
+
+        local_tunnel_maps_set.insert(*tunnel_map_id);
+
+        // TODO increase reference count for used object ids
+    }
 
     return status;
 }
@@ -55,9 +129,27 @@ sai_status_t redis_remove_tunnel_map(
 
     SWSS_LOG_ENTER();
 
+    // TODO check if it is safe to remove tunnel map
+
+    if (local_tunnel_maps_set.find(tunnel_map_id) == local_tunnel_maps_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel map %llx is missing", tunnel_map_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_TUNNEL_MAP,
             tunnel_map_id);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("erasing tunnel map %llx to local state", tunnel_map_id);
+
+        local_tunnel_maps_set.erase(tunnel_map_id);
+
+        // TODO increase reference count for used object ids
+    }
 
     return status;
 }
@@ -81,6 +173,35 @@ sai_status_t redis_set_tunnel_map_attribute(
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr == NULL)
+    {
+        SWSS_LOG_ERROR("attribute parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_tunnel_maps_set.find(tunnel_map_id) == local_tunnel_maps_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel map %llx is missing", tunnel_map_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (attr->id)
+    {
+        case SAI_TUNNEL_MAP_ATTR_MAP_TO_VALUE_LIST:
+
+            // TODO validate this use case
+
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("set attribute id %d is not allowed", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_TUNNEL_MAP,
@@ -110,6 +231,49 @@ sai_status_t redis_get_tunnel_map_attribute(
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    // TODO logic in GET api can be unified for all APIs
+    // if metadata will be available
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_tunnel_maps_set.find(tunnel_map_id) == local_tunnel_maps_set.end())
+    {
+        SWSS_LOG_ERROR("tunnel map %llx is missing", tunnel_map_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attribute_t* attr = &attr_list[i];
+
+        switch (attr->id)
+        {
+            case SAI_TUNNEL_MAP_ATTR_TYPE:
+            case SAI_TUNNEL_MAP_ATTR_MAP_TO_VALUE_LIST:
+                // ok
+                break;
+
+            default:
+
+                SWSS_LOG_ERROR("set attribute id %d is not allowed", attr->id);
+
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
+    }
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_TUNNEL_MAP,
