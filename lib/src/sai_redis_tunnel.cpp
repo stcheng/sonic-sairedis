@@ -392,9 +392,9 @@ sai_status_t redis_create_tunnel(
     switch (type)
     {
         case SAI_TUNNEL_IPINIP:
-        case SAI_TUNNEL_IPINIP_GRE:
-        case SAI_TUNNEL_VXLAN:
-        case SAI_TUNNEL_MPLS:
+        // case SAI_TUNNEL_IPINIP_GRE:  // will probably require change, SAI_TUNNEL_ATTR_ENCAP_GRE_KEY_VALID may not be needed
+        // case SAI_TUNNEL_VXLAN:
+        // case SAI_TUNNEL_MPLS:
             // ok
             break;
 
@@ -537,6 +537,8 @@ sai_status_t redis_create_tunnel(
                 }
             }
 
+            // TODO we must check more like oecn/uecn must be present
+
             break;
 
         default:
@@ -603,6 +605,8 @@ sai_status_t redis_create_tunnel(
                 }
             }
 
+            // TODO more validation my be needed oecn/oecn mapper must be present
+
             break;
 
         default:
@@ -622,7 +626,7 @@ sai_status_t redis_create_tunnel(
     switch (type)
     {
         case SAI_TUNNEL_IPINIP:
-        case SAI_TUNNEL_IPINIP_GRE:
+        // case SAI_TUNNEL_IPINIP_GRE: // for now not supported
 
             if (attr_decap_ttl_mode == NULL)
             {
@@ -1031,9 +1035,9 @@ sai_status_t redis_create_tunnel_term_table_entry (
     switch (tunnel_type)
     {
         case SAI_TUNNEL_IPINIP:
-        case SAI_TUNNEL_IPINIP_GRE:
-        case SAI_TUNNEL_VXLAN:
-        case SAI_TUNNEL_MPLS:
+        // case SAI_TUNNEL_IPINIP_GRE:  // for now not supported
+        // case SAI_TUNNEL_VXLAN:
+        // case SAI_TUNNEL_MPLS:
             // ok
             break;
 
