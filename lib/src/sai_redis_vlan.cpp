@@ -88,6 +88,7 @@ sai_status_t redis_remove_vlan(
 
     // TODO check if it is safe to remove vlan:
     // need to check: vlan members, FDB, router_interface, port?
+    // SAI_PORT_ATTR_PORT_VLAN_ID on port can be set
 
     sai_status_t status = redis_generic_remove_vlan(
             SAI_OBJECT_TYPE_VLAN,
