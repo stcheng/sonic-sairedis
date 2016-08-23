@@ -42,6 +42,7 @@ extern std::set<sai_object_id_t>        local_tunnel_maps_set;
 extern std::set<sai_object_id_t>        local_tunnels_set;
 extern std::set<sai_object_id_t>        local_tunnel_term_table_entries_set;
 extern std::set<sai_object_id_t>        local_ports_set;
+extern std::set<sai_object_id_t>        local_policers_set;
 
 // other global declarations
 

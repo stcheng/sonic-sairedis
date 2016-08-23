@@ -126,6 +126,7 @@ void clear_local_state()
     local_vlan_members_set.clear();
     local_vlans_set.clear();
     local_ports_set.clear();
+    local_policers_set.clear();
 
     // populate default objects
 
