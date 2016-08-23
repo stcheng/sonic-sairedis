@@ -133,6 +133,7 @@ void clear_local_state()
     local_virtual_routers_set.clear();
     local_vlan_members_set.clear();
     local_vlans_set.clear();
+    local_hostif_trap_groups_set.clear();
 
     // populate default objects
 
