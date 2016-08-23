@@ -383,16 +383,88 @@ sai_status_t redis_set_switch_attribute(
     {
         // TODO commented stuff needs to check for right object existence
 
-        case SAI_SWITCH_ATTR_SWITCHING_MODE:    // TODO check sai_switch_switching_mode_t
+        case SAI_SWITCH_ATTR_SWITCHING_MODE:
+
+            {
+                sai_switch_switching_mode_t mode = (sai_switch_switching_mode_t)attr->value.s32;
+
+                switch (mode)
+                {
+                    case SAI_SWITCHING_MODE_CUT_THROUGH:
+                    case SAI_SWITCHING_MODE_STORE_AND_FORWARD:
+                        // ok
+                        break;
+
+                    default:
+
+                        SWSS_LOG_ERROR("invalid switching mode value: %d", mode);
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                }
+            }
+
+            break;
+
         case SAI_SWITCH_ATTR_BCAST_CPU_FLOOD_ENABLE:
         case SAI_SWITCH_ATTR_MCAST_CPU_FLOOD_ENABLE:
         case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
         case SAI_SWITCH_ATTR_MAX_LEARNED_ADDRESSES:
         case SAI_SWITCH_ATTR_FDB_AGING_TIME:
-        case SAI_SWITCH_ATTR_FDB_UNICAST_MISS_ACTION:   // TODO check sai_packet_action_t
+            break;
+
+        case SAI_SWITCH_ATTR_FDB_UNICAST_MISS_ACTION:
         case SAI_SWITCH_ATTR_FDB_BROADCAST_MISS_ACTION:
         case SAI_SWITCH_ATTR_FDB_MULTICAST_MISS_ACTION:
-        case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_ALGORITHM: // TODO check sai_hash_algorithm_t
+
+            {
+                sai_packet_action_t action = (sai_packet_action_t)attr->value.s32;
+
+                switch (action)
+                {
+                    case SAI_PACKET_ACTION_DROP:
+                    case SAI_PACKET_ACTION_FORWARD:
+                    case SAI_PACKET_ACTION_COPY:
+                    case SAI_PACKET_ACTION_COPY_CANCEL:
+                    case SAI_PACKET_ACTION_TRAP:
+                    case SAI_PACKET_ACTION_LOG:
+                    case SAI_PACKET_ACTION_DENY:
+                    case SAI_PACKET_ACTION_TRANSIT:
+                        // ok
+                        break;
+
+                    default:
+
+                        SWSS_LOG_ERROR("invalid packet action value: %d", action);
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                }
+            }
+
+            break;
+
+        case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_ALGORITHM:
+
+            {
+                sai_hash_algorithm_t hash_algorithm = (sai_hash_algorithm_t)attr->value.s32;
+
+                switch (hash_algorithm)
+                {
+                    case SAI_HASH_ALGORITHM_CRC:
+                    case SAI_HASH_ALGORITHM_XOR:
+                    case SAI_HASH_ALGORITHM_RANDOM:
+                        // ok
+                        break;
+
+                    default:
+
+                        SWSS_LOG_ERROR("invalid ecmp default hash algorithm value: %d", hash_algorithm);
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                }
+            }
+
+            break;
+
         case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_SEED:
         case SAI_SWITCH_ATTR_ECMP_DEFAULT_SYMMETRIC_HASH:
         // case SAI_SWITCH_ATTR_ECMP_HASH_IPV4:
@@ -405,7 +477,7 @@ sai_status_t redis_set_switch_attribute(
         // case SAI_SWITCH_ATTR_LAG_HASH_IPV4_IN_IPV4:
         // case SAI_SWITCH_ATTR_LAG_HASH_IPV6:
         case SAI_SWITCH_ATTR_COUNTER_REFRESH_INTERVAL:
-        // case SAI_SWITCH_ATTR_QOS_DEFAULT_TC:
+        //case SAI_SWITCH_ATTR_QOS_DEFAULT_TC:
         //case SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_MAP:
         //case SAI_SWITCH_ATTR_QOS_DOT1P_TO_COLOR_MAP:
         //case SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_MAP:
