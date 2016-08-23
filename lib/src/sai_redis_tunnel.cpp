@@ -357,34 +357,52 @@ sai_status_t redis_create_tunnel(
         return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
     }
 
-    // TODO should this be mandatory attrib ?
-    if (attr_underlay_interface != NULL)
+    if (attr_underlay_interface == NULL)
     {
-        sai_object_id_t uif_id = attr_underlay_interface->value.oid;
+        SWSS_LOG_ERROR("missing underlay interface attribute");
 
-        if (uif_id == SAI_NULL_OBJECT_ID)
-        {
-            SWSS_LOG_ERROR("underlay interface object id is NULL");
-
-            return SAI_STATUS_INVALID_PARAMETER;
-        }
-
-        // TODO validate if this interface exists and it's valid object id !
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
     }
 
-    // TODO should this be mandatory attrib ?
-    if (attr_overlay_interface != NULL)
+    sai_object_id_t uif_id = attr_underlay_interface->value.oid;
+
+    if (uif_id == SAI_NULL_OBJECT_ID)
     {
-        sai_object_id_t oif_id = attr_overlay_interface->value.oid;
+        SWSS_LOG_ERROR("underlay interface object id is NULL");
 
-        if (oif_id == SAI_NULL_OBJECT_ID)
-        {
-            SWSS_LOG_ERROR("overlay interface object id is NULL");
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
-            return SAI_STATUS_INVALID_PARAMETER;
-        }
+    // TODO for GRE/VXLAN it may be different type
+    if (local_router_interfaces_set.find(uif_id) == local_router_interfaces_set.end())
+    {
+        SWSS_LOG_ERROR("underlay interface %llx is missing");
 
-        // TODO validate if this interface exists and it's valid object id !
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_overlay_interface == NULL)
+    {
+        SWSS_LOG_ERROR("missing overlay interface attribute");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_object_id_t oif_id = attr_overlay_interface->value.oid;
+
+    if (oif_id == SAI_NULL_OBJECT_ID)
+    {
+        SWSS_LOG_ERROR("overlay interface object id is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO for GRE/VXLAN it may be different type
+    if (local_router_interfaces_set.find(oif_id) == local_router_interfaces_set.end())
+    {
+        SWSS_LOG_ERROR("overlay interface %llx is missing");
+
+        return SAI_STATUS_INVALID_PARAMETER;
     }
 
     sai_tunnel_type_t type = (sai_tunnel_type_t)attr_type->value.s32;
@@ -778,13 +796,6 @@ sai_status_t redis_set_tunnel_attribute(
 
     switch (attr->id)
     {
-        case SAI_TUNNEL_ATTR_UNDERLAY_INTERFACE:
-        case SAI_TUNNEL_ATTR_OVERLAY_INTERFACE:
-
-            // TODO validate if those can be set dynamically, and validate if interfaces exists
-
-            break;
-
         case SAI_TUNNEL_ATTR_ENCAP_ECN_MODE:
         case SAI_TUNNEL_ATTR_ENCAP_MAPPERS:
 
