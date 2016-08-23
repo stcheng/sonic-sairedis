@@ -137,19 +137,31 @@ sai_status_t redis_create_router_interface(
                 {
                     case SAI_OBJECT_TYPE_PORT:
 
-                        // TODO check if port id is valid port id on list
-                       break;
+                        if (local_ports_set.find(port_id) == local_ports_set.end())
+                        {
+                            SWSS_LOG_ERROR("port %llx is missing", port_id);
+
+                            return SAI_STATUS_INVALID_PARAMETER;
+                        }
+
+                        break;
 
                     case SAI_OBJECT_TYPE_LAG:
 
-                       // TODO check if lag id is valid lag id on list
-                       break;
+                        if (local_lags_set.find(port_id) == local_lags_set.end())
+                        {
+                            SWSS_LOG_ERROR("lag %llx is mising", port_id);
+
+                            return SAI_STATUS_INVALID_PARAMETER;
+                        }
+
+                        break;
 
                     default:
 
-                       SWSS_LOG_ERROR("port id type %d is not LAG or PORT, id: %llx", type, port_id);
+                        SWSS_LOG_ERROR("port id type %d is not LAG or PORT, id: %llx", type, port_id);
 
-                       return SAI_STATUS_INVALID_PARAMETER;
+                        return SAI_STATUS_INVALID_PARAMETER;
                 }
             }
 
@@ -164,7 +176,18 @@ sai_status_t redis_create_router_interface(
                 return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
             }
 
-            // TODO check if supplied vlan exists
+            // TODO indirect dependency, since vlan is a number, this must be
+            // checked if router interface exists before removing vlan
+            {
+                sai_vlan_id_t vlan_id = attr_vlan_id->value.u16;
+
+                if (local_vlans_set.find(vlan_id) == local_vlans_set.end())
+                {
+                    SWSS_LOG_ERROR("vlan %d is missing", vlan_id);
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+            }
 
             break;
 

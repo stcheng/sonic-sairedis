@@ -771,7 +771,6 @@ sai_status_t redis_get_switch_attribute(
                 }
             }
         }
-
     }
 
     return status;
