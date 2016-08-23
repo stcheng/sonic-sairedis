@@ -29,15 +29,15 @@ sai_status_t redis_set_port_attribute(
         return SAI_STATUS_INVALID_PARAMETER;
     }
 
-    // TODO to make this work we need to populate port list first
-    // since on current sai ports exist right away and are not created
-    //
-    // if (local_ports_set.find(port_id) == local_ports_set.end())
-    // {
-    //     SWSS_LOG_ERROR("port %llx is missing", port_id);
+    //TODO to make this work we need to populate port list first
+    //since on current sai ports exist right away and are not created
 
-    //     return SAI_STATUS_INVALID_PARAMETER;
-    // }
+    if (local_ports_set.find(port_id) == local_ports_set.end())
+    {
+        SWSS_LOG_ERROR("port %llx is missing", port_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     switch (attr->id)
     {
@@ -201,13 +201,13 @@ sai_status_t redis_get_port_attribute(
 
     // TODO to make this work we need to populate port list first
     // since on current sai ports exist right away and are not created
-    //
-    // if (local_ports_set.find(port_id) == local_ports_set.end())
-    // {
-    //     SWSS_LOG_ERROR("port %llx is missing", port_id);
 
-    //     return SAI_STATUS_INVALID_PARAMETER;
-    // }
+    if (local_ports_set.find(port_id) == local_ports_set.end())
+    {
+        SWSS_LOG_ERROR("port %llx is missing", port_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     for (uint32_t i = 0; i < attr_count; ++i)
     {

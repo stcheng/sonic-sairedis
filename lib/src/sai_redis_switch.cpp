@@ -122,17 +122,17 @@ void clear_local_state()
     local_neighbor_entries_set.clear();
     local_next_hop_groups_set.clear();
     local_next_hops_set.clear();
+    local_policers_set.clear();
+    local_ports_set.clear();
     local_route_entries_set.clear();
     local_router_interfaces_set.clear();
+    local_switches_set.clear();
     local_tunnel_maps_set.clear();
     local_tunnels_set.clear();
     local_tunnel_term_table_entries_set.clear();
     local_virtual_routers_set.clear();
     local_vlan_members_set.clear();
     local_vlans_set.clear();
-    local_ports_set.clear();
-    local_policers_set.clear();
-    local_switches_set.clear();
 
     // populate default objects
 
@@ -735,6 +735,43 @@ sai_status_t redis_get_switch_attribute(
 
             SWSS_LOG_INFO("got default virtual router ID %llx via get api", local_default_virtual_router_id);
         }
+
+        const sai_attribute_t* attr_port_list = redis_get_attribute_by_id(SAI_SWITCH_ATTR_PORT_LIST, attr_count, attr_list);
+
+        if (attr_port_list != NULL)
+        {
+            sai_object_list_t port_list = attr_port_list->value.objlist;
+
+            bool empty = local_ports_set.size();
+
+            if (empty)
+            {
+                for (uint32_t i =0; i < port_list.count; ++i)
+                {
+                    local_ports_set.insert(port_list.list[i]);
+                }
+
+                SWSS_LOG_INFO("got %u ports via get api", port_list.count);
+            }
+            else
+            {
+                // port list is not empty, just a sanity checkH
+                // if second get will return the same list
+
+                for (uint32_t i = 0; i < port_list.count; ++i)
+                {
+                    sai_object_id_t port_id = port_list.list[i];
+
+                    if (local_ports_set.find(port_id) == local_ports_set.end())
+                    {
+                        SWSS_LOG_ERROR("current port %llx was not found on previous list", port_id);
+
+                        return SAI_STATUS_FAILURE;
+                    }
+                }
+            }
+        }
+
     }
 
     return status;
