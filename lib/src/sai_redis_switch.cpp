@@ -3,6 +3,11 @@
 
 #include "swss/selectableevent.h"
 
+std::set<sai_object_id_t> local_switches_set;
+
+// TODO only until switch will be actual object
+#define DEFAULT_SWITCH_ID 0
+
 sai_object_id_t local_cpu_port_id = SAI_NULL_OBJECT_ID;
 
 // if we will not get response in 60 seconds when
@@ -127,10 +132,13 @@ void clear_local_state()
     local_vlans_set.clear();
     local_ports_set.clear();
     local_policers_set.clear();
+    local_switches_set.clear();
 
     // populate default objects
 
     local_vlans_set.insert(DEFAULT_VLAN_NUMBER);
+
+    local_switches_set.insert(DEFAULT_SWITCH_ID);
 
     // TODO populate vlan 1 members via ports ? get from switch?
     // same from default router and cou port id should be obtained from switch
@@ -258,7 +266,7 @@ sai_status_t redis_initialize_switch(
  * Return Values:
  *   None
  */
-void  redis_shutdown_switch(
+void redis_shutdown_switch(
     _In_ bool warm_restart_hint)
 {
     std::lock_guard<std::mutex> apilock(g_apimutex);
@@ -347,12 +355,74 @@ void redis_disconnect_switch(void)
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_set_switch_attribute(
+sai_status_t redis_set_switch_attribute(
     _In_ const sai_attribute_t *attr)
 {
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr == NULL)
+    {
+        SWSS_LOG_ERROR("attribute parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO use proper switch ID when switch will be an object
+    sai_object_id_t switch_id = DEFAULT_SWITCH_ID;
+
+    if (local_switches_set.find(switch_id) == local_switches_set.end())
+    {
+        SWSS_LOG_ERROR("switch %llx is missing", switch_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (attr->id)
+    {
+        // TODO commented stuff needs to check for right object existence
+
+        case SAI_SWITCH_ATTR_SWITCHING_MODE:    // TODO check sai_switch_switching_mode_t
+        case SAI_SWITCH_ATTR_BCAST_CPU_FLOOD_ENABLE:
+        case SAI_SWITCH_ATTR_MCAST_CPU_FLOOD_ENABLE:
+        case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
+        case SAI_SWITCH_ATTR_MAX_LEARNED_ADDRESSES:
+        case SAI_SWITCH_ATTR_FDB_AGING_TIME:
+        case SAI_SWITCH_ATTR_FDB_UNICAST_MISS_ACTION:   // TODO check sai_packet_action_t
+        case SAI_SWITCH_ATTR_FDB_BROADCAST_MISS_ACTION:
+        case SAI_SWITCH_ATTR_FDB_MULTICAST_MISS_ACTION:
+        case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_ALGORITHM: // TODO check sai_hash_algorithm_t
+        case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_SEED:
+        case SAI_SWITCH_ATTR_ECMP_DEFAULT_SYMMETRIC_HASH:
+        // case SAI_SWITCH_ATTR_ECMP_HASH_IPV4:
+        // case SAI_SWITCH_ATTR_ECMP_HASH_IPV4_IN_IPV4:
+        // case SAI_SWITCH_ATTR_ECMP_HASH_IPV6:
+        case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_ALGORITHM:
+        case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_SEED:
+        case SAI_SWITCH_ATTR_LAG_DEFAULT_SYMMETRIC_HASH:
+        // case SAI_SWITCH_ATTR_LAG_HASH_IPV4:
+        // case SAI_SWITCH_ATTR_LAG_HASH_IPV4_IN_IPV4:
+        // case SAI_SWITCH_ATTR_LAG_HASH_IPV6:
+        case SAI_SWITCH_ATTR_COUNTER_REFRESH_INTERVAL:
+        // case SAI_SWITCH_ATTR_QOS_DEFAULT_TC:
+        //case SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_MAP:
+        //case SAI_SWITCH_ATTR_QOS_DOT1P_TO_COLOR_MAP:
+        //case SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_MAP:
+        //case SAI_SWITCH_ATTR_QOS_DSCP_TO_COLOR_MAP:
+        //case SAI_SWITCH_ATTR_QOS_TC_TO_QUEUE_MAP:
+        //case SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP:
+        //case SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("setting attribute id %d is not supported", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_SWITCH,
@@ -374,13 +444,162 @@ sai_status_t  redis_set_switch_attribute(
  *    @return SAI_STATUS_SUCCESS on success
  *            Failure status code on error
  */
-sai_status_t  redis_get_switch_attribute(
+sai_status_t redis_get_switch_attribute(
     _In_ sai_uint32_t attr_count,
     _Inout_ sai_attribute_t *attr_list)
 {
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    // TODO use proper switch ID when switch will be an object
+    sai_object_id_t switch_id = DEFAULT_SWITCH_ID;
+
+    if (local_switches_set.find(switch_id) == local_switches_set.end())
+    {
+        SWSS_LOG_ERROR("switch %llx is missing", switch_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attribute_t* attr = &attr_list[i];
+
+        switch (attr->id)
+        {
+            // RO
+            case SAI_SWITCH_ATTR_PORT_NUMBER:
+            case SAI_SWITCH_ATTR_PORT_LIST:
+
+                {
+                    sai_object_list_t port_list = attr->value.objlist;
+
+                    if (port_list.list == NULL)
+                    {
+                        SWSS_LOG_ERROR("port list is NULL");
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                    }
+                }
+
+                break;
+
+            case SAI_SWITCH_ATTR_PORT_MAX_MTU:
+            case SAI_SWITCH_ATTR_CPU_PORT:
+            case SAI_SWITCH_ATTR_MAX_VIRTUAL_ROUTERS:
+            case SAI_SWITCH_ATTR_FDB_TABLE_SIZE:
+            case SAI_SWITCH_ATTR_L3_NEIGHBOR_TABLE_SIZE:
+            case SAI_SWITCH_ATTR_L3_ROUTE_TABLE_SIZE:
+            case SAI_SWITCH_ATTR_LAG_MEMBERS:
+            case SAI_SWITCH_ATTR_NUMBER_OF_LAGS:
+            case SAI_SWITCH_ATTR_ECMP_MEMBERS:
+            case SAI_SWITCH_ATTR_NUMBER_OF_ECMP_GROUPS:
+            case SAI_SWITCH_ATTR_NUMBER_OF_UNICAST_QUEUES:
+            case SAI_SWITCH_ATTR_NUMBER_OF_MULTICAST_QUEUES:
+            case SAI_SWITCH_ATTR_NUMBER_OF_QUEUES:
+            case SAI_SWITCH_ATTR_NUMBER_OF_CPU_QUEUES:
+            case SAI_SWITCH_ATTR_ON_LINK_ROUTE_SUPPORTED:
+            case SAI_SWITCH_ATTR_OPER_STATUS:
+            case SAI_SWITCH_ATTR_MAX_TEMP:
+            case SAI_SWITCH_ATTR_ACL_TABLE_MINIMUM_PRIORITY:
+            case SAI_SWITCH_ATTR_ACL_TABLE_MAXIMUM_PRIORITY:
+            case SAI_SWITCH_ATTR_ACL_ENTRY_MINIMUM_PRIORITY:
+            case SAI_SWITCH_ATTR_ACL_ENTRY_MAXIMUM_PRIORITY:
+            case SAI_SWITCH_ATTR_FDB_DST_USER_META_DATA_RANGE:
+            case SAI_SWITCH_ATTR_ROUTE_DST_USER_META_DATA_RANGE:
+            case SAI_SWITCH_ATTR_NEIGHBOR_DST_USER_META_DATA_RANGE:
+            case SAI_SWITCH_ATTR_PORT_USER_META_DATA_RANGE:
+            case SAI_SWITCH_ATTR_VLAN_USER_META_DATA_RANGE:
+            case SAI_SWITCH_ATTR_ACL_USER_META_DATA_RANGE:
+            case SAI_SWITCH_ATTR_ACL_USER_TRAP_ID_RANGE:
+            case SAI_SWITCH_ATTR_DEFAULT_STP_INST_ID:
+            case SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID:
+            case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_TRAFFIC_CLASSES:
+            case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUP_HIERARCHY_LEVELS:
+            case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUPS_PER_HIERARCHY_LEVEL: // sai_u32_li
+
+                {
+                    sai_u32_list_t groups_per_hierarhy = attr->value.u32list;
+
+                    if (groups_per_hierarhy.list == NULL)
+                    {
+                        SWSS_LOG_ERROR("sheduler groups per hierarhy level list is NULL");
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                    }
+                }
+
+                break;
+
+            case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_CHILDS_PER_SCHEDULER_GROUP:
+            case SAI_SWITCH_ATTR_TOTAL_BUFFER_SIZE:
+            case SAI_SWITCH_ATTR_INGRESS_BUFFER_POOL_NUM:
+            case SAI_SWITCH_ATTR_EGRESS_BUFFER_POOL_NUM:
+            case SAI_SWITCH_ATTR_DEFAULT_TRAP_GROUP:
+            case SAI_SWITCH_ATTR_ECMP_HASH:
+            case SAI_SWITCH_ATTR_LAG_HASH:
+            case SAI_SWITCH_ATTR_RESTART_TYPE:
+            case SAI_SWITCH_ATTR_MIN_PLANNED_RESTART_INTERVAL:
+            case SAI_SWITCH_ATTR_NV_STORAGE_SIZE:
+            case SAI_SWITCH_ATTR_MAX_ACL_ACTION_COUNT:
+            case SAI_SWITCH_ATTR_ACL_CAPABILITY:
+
+            // RW
+            case SAI_SWITCH_ATTR_SWITCHING_MODE:
+            case SAI_SWITCH_ATTR_BCAST_CPU_FLOOD_ENABLE:
+            case SAI_SWITCH_ATTR_MCAST_CPU_FLOOD_ENABLE:
+            case SAI_SWITCH_ATTR_SRC_MAC_ADDRESS:
+            case SAI_SWITCH_ATTR_MAX_LEARNED_ADDRESSES:
+            case SAI_SWITCH_ATTR_FDB_AGING_TIME:
+            case SAI_SWITCH_ATTR_FDB_UNICAST_MISS_ACTION:
+            case SAI_SWITCH_ATTR_FDB_BROADCAST_MISS_ACTION:
+            case SAI_SWITCH_ATTR_FDB_MULTICAST_MISS_ACTION:
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_ALGORITHM:
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_HASH_SEED:
+            case SAI_SWITCH_ATTR_ECMP_DEFAULT_SYMMETRIC_HASH:
+            // case SAI_SWITCH_ATTR_ECMP_HASH_IPV4:
+            // case SAI_SWITCH_ATTR_ECMP_HASH_IPV4_IN_IPV4:
+            // case SAI_SWITCH_ATTR_ECMP_HASH_IPV6:
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_ALGORITHM:
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_HASH_SEED:
+            case SAI_SWITCH_ATTR_LAG_DEFAULT_SYMMETRIC_HASH:
+            // case SAI_SWITCH_ATTR_LAG_HASH_IPV4:
+            // case SAI_SWITCH_ATTR_LAG_HASH_IPV4_IN_IPV4:
+            // case SAI_SWITCH_ATTR_LAG_HASH_IPV6:
+            case SAI_SWITCH_ATTR_COUNTER_REFRESH_INTERVAL:
+            // case SAI_SWITCH_ATTR_QOS_DEFAULT_TC:
+            //case SAI_SWITCH_ATTR_QOS_DOT1P_TO_TC_MAP:
+            //case SAI_SWITCH_ATTR_QOS_DOT1P_TO_COLOR_MAP:
+            //case SAI_SWITCH_ATTR_QOS_DSCP_TO_TC_MAP:
+            //case SAI_SWITCH_ATTR_QOS_DSCP_TO_COLOR_MAP:
+            //case SAI_SWITCH_ATTR_QOS_TC_TO_QUEUE_MAP:
+            //case SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP:
+            //case SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP:
+            // ok
+            break;
+
+            default:
+
+                SWSS_LOG_ERROR("getting attribute id %d is not supported", attr->id);
+
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
+    }
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_SWITCH,
