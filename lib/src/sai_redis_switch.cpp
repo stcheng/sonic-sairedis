@@ -125,6 +125,7 @@ void clear_local_state()
     local_virtual_routers_set.clear();
     local_vlan_members_set.clear();
     local_vlans_set.clear();
+    local_ports_set.clear();
 
     // populate default objects
 
@@ -132,6 +133,8 @@ void clear_local_state()
 
     // TODO populate vlan 1 members via ports ? get from switch?
     // same from default router and cou port id should be obtained from switch
+
+    // TODO populate ports list
 
     local_default_virtual_router_id = SAI_NULL_OBJECT_ID;
 
@@ -186,6 +189,13 @@ sai_status_t redis_initialize_switch(
 
             if (g_switchInitialized)
             {
+                if (op == NOTIFY_SAI_INIT_VIEW)
+                {
+                    SWSS_LOG_NOTICE("clearing current local state sinice init view is called on initialised switch");
+
+                    clear_local_state();
+                }
+
                 return status;
             }
 
