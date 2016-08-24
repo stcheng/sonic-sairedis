@@ -136,7 +136,7 @@ void clear_local_state()
     local_vlan_members_set.clear();
     local_vlans_set.clear();
     local_hostif_trap_groups_set.clear();
-    local_hostif_set.clear();
+    local_hostifs_set.clear();
 
     // populate default objects
 
@@ -560,6 +560,7 @@ sai_status_t redis_get_switch_attribute(
         {
             // RO
             case SAI_SWITCH_ATTR_PORT_NUMBER:
+                break;
             case SAI_SWITCH_ATTR_PORT_LIST:
 
                 {
@@ -607,6 +608,7 @@ sai_status_t redis_get_switch_attribute(
             case SAI_SWITCH_ATTR_DEFAULT_VIRTUAL_ROUTER_ID:
             case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_TRAFFIC_CLASSES:
             case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUP_HIERARCHY_LEVELS:
+                break;
             case SAI_SWITCH_ATTR_QOS_MAX_NUMBER_OF_SCHEDULER_GROUPS_PER_HIERARCHY_LEVEL: // sai_u32_li
 
                 {
@@ -667,7 +669,7 @@ sai_status_t redis_get_switch_attribute(
             //case SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DOT1P_MAP:
             //case SAI_SWITCH_ATTR_QOS_TC_AND_COLOR_TO_DSCP_MAP:
             // ok
-            break;
+                break;
 
             default:
 
@@ -718,7 +720,7 @@ sai_status_t redis_get_switch_attribute(
         // default virtual router ID can be only obtained by sai GET switch API
         // and this router can't be removed from the switch
 
-        if (attr_def_vr_id == NULL)
+        if (attr_def_vr_id != NULL)
         {
             sai_object_id_t vr_id = attr_def_vr_id->value.oid;
 
@@ -746,7 +748,7 @@ sai_status_t redis_get_switch_attribute(
         {
             sai_object_list_t port_list = attr_port_list->value.objlist;
 
-            bool empty = local_ports_set.size();
+            bool empty = local_ports_set.size() == 0;
 
             if (empty)
             {
