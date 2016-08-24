@@ -1,6 +1,8 @@
 #include "sai_redis.h"
+#include <cstring>
 
 std::set<sai_object_id_t> local_hostif_trap_groups_set;
+std::set<sai_object_id_t> local_hostifs_set;
 
 /**
  * Routine Description:
@@ -465,11 +467,137 @@ sai_status_t redis_create_hostif(
 
     SWSS_LOG_ENTER();
 
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 2");
+
+        // SAI_HOSTIF_ATTR_TYPE
+        //
+        // - conditional
+        // SAI_HOSTIF_ATTR_RIF_OR_PORT_ID
+        // SAI_HOSTIF_ATTR_NAME
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    const sai_attribute_t* attr_type = redis_get_attribute_by_id(SAI_HOSTIF_ATTR_TYPE, attr_count, attr_list);
+
+    const sai_attribute_t* attr_rif_or_port_id = redis_get_attribute_by_id(SAI_HOSTIF_ATTR_RIF_OR_PORT_ID, attr_count, attr_list);
+    const sai_attribute_t* attr_name = redis_get_attribute_by_id(SAI_HOSTIF_ATTR_NAME, attr_count, attr_list);
+
+    if (attr_type == NULL)
+    {
+        SWSS_LOG_ERROR("missing type attribute");
+
+        return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+    }
+
+    sai_hostif_type_t type = (sai_hostif_type_t)attr_type->value.s32;
+
+    switch (type)
+    {
+        case SAI_HOSTIF_TYPE_NETDEV:
+
+            if (attr_rif_or_port_id == NULL)
+            {
+                SWSS_LOG_ERROR("missing rif or port id attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            // STIF_NAME_SIZE
+            // TODO validation logic - RIF or PORT, can be ether one
+            {
+                sai_object_id_t rif_or_port_id = attr_rif_or_port_id->value.oid;
+
+                if (local_ports_set.find(rif_or_port_id) == local_ports_set.end() &&
+                    local_router_interfaces_set.find(rif_or_port_id) == local_router_interfaces_set.end())
+                {
+                    // TODO we could get actual type of that object
+                    SWSS_LOG_ERROR("rif or port %llx is missing", rif_or_port_id);
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+            }
+
+            break;
+
+        case SAI_HOSTIF_TYPE_FD:
+
+            if (attr_name == NULL)
+            {
+                SWSS_LOG_ERROR("missing name attribute");
+
+                return SAI_STATUS_MANDATORY_ATTRIBUTE_MISSING;
+            }
+
+            {
+                // TODO we could validate name here HOSTIF_NAME_SIZE - 1 \0 this will be extra logic
+                const char* chardata = attr_name->value.chardata;
+
+                size_t len = strnlen(chardata, HOSTIF_NAME_SIZE);
+
+                if (len == HOSTIF_NAME_SIZE)
+                {
+                    SWSS_LOG_ERROR("host interface name is too long");
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+
+                if (len == 0)
+                {
+                    SWSS_LOG_ERROR("host interface name is zero");
+
+                    return SAI_STATUS_INVALID_PARAMETER;
+                }
+
+                for (size_t i = 0; i < len; ++i)
+                {
+                    char c = chardata[i];
+
+                    if (c < 0x20 || c > 0x7e)
+                    {
+                        SWSS_LOG_ERROR("interface name contains invalid character 0x%02x", c);
+
+                        return SAI_STATUS_INVALID_PARAMETER;
+                    }
+                }
+
+                // TODO check if it contains only ASCII and whether name is not used
+                // by other host interface
+            }
+
+            break;
+
+
+        default:
+
+            SWSS_LOG_ERROR("invalid type attribute value: %d", type);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     sai_status_t status = redis_generic_create(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
             hif_id,
             attr_count,
             attr_list);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("host interface %llx to local state", *hif_id);
+
+        local_hostif_set.insert(*hif_id);
+
+        // TODO increase reference count for used object ids
+    }
 
     return status;
 }
@@ -492,9 +620,25 @@ sai_status_t redis_remove_hostif(
 
     SWSS_LOG_ENTER();
 
+    // TODO check hostif can be safely removed
+
+    if (local_hostifs_set.find(hif_id) == local_hostifs_set.end())
+    {
+        SWSS_LOG_ERROR("host interface %llx is missing", hif_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
     sai_status_t status = redis_generic_remove(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
             hif_id);
+
+    if (status == SAI_STATUS_SUCCESS)
+    {
+        SWSS_LOG_DEBUG("erasing host interface %llx from local state", hif_id);
+
+        local_hostif_set.erase(hif_id);
+    }
 
     return status;
 }
@@ -518,6 +662,33 @@ sai_status_t redis_set_hostif_attribute(
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr == NULL)
+    {
+        SWSS_LOG_ERROR("attribute parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_hostifs_set.find(hif_id) == local_hostifs_set.end())
+    {
+        SWSS_LOG_ERROR("host interface %llx is missing", hif_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    switch (attr->id)
+    {
+        case SAI_HOSTIF_ATTR_OPER_STATUS:
+            // ok
+            break;
+
+        default:
+
+            SWSS_LOG_ERROR("setting attribute id %d is not supported", attr->id);
+
+            return SAI_STATUS_INVALID_PARAMETER;
+    }
 
     sai_status_t status = redis_generic_set(
             SAI_OBJECT_TYPE_HOST_INTERFACE,
@@ -548,6 +719,48 @@ sai_status_t redis_get_hostif_attribute(
     std::lock_guard<std::mutex> lock(g_apimutex);
 
     SWSS_LOG_ENTER();
+
+    if (attr_list == NULL)
+    {
+        SWSS_LOG_ERROR("attribute list parameter is NULL");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (attr_count < 1)
+    {
+        SWSS_LOG_ERROR("attribute count must be at least 1");
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    if (local_hostifs_set.find(hif_id) == local_hostifs_set.end())
+    {
+        SWSS_LOG_ERROR("host interface %llx is missing", hif_id);
+
+        return SAI_STATUS_INVALID_PARAMETER;
+    }
+
+    for (uint32_t i = 0; i < attr_count; ++i)
+    {
+        sai_attribute_t* attr = &attr_list[i];
+
+        switch (attr->id)
+        {
+            case SAI_HOSTIF_ATTR_TYPE:
+            case SAI_HOSTIF_ATTR_RIF_OR_PORT_ID:
+            case SAI_HOSTIF_ATTR_NAME:
+            case SAI_HOSTIF_ATTR_OPER_STATUS:
+                // ok
+                break;
+
+            default:
+
+                SWSS_LOG_ERROR("getting attribute id %d is not supported", attr->id);
+
+                return SAI_STATUS_INVALID_PARAMETER;
+        }
+    }
 
     sai_status_t status = redis_generic_get(
             SAI_OBJECT_TYPE_HOST_INTERFACE,

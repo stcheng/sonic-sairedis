@@ -45,6 +45,7 @@ extern std::set<sai_object_id_t>        local_ports_set;
 extern std::set<sai_object_id_t>        local_policers_set;
 extern std::set<sai_object_id_t>        local_switches_set;
 extern std::set<sai_object_id_t>        local_hostif_trap_groups_set;
+extern std::set<sai_object_id_t>        local_hostif_set;
 
 // other global declarations
 

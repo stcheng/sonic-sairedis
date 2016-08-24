@@ -10,6 +10,8 @@ std::set<sai_object_id_t> local_switches_set;
 
 sai_object_id_t local_cpu_port_id = SAI_NULL_OBJECT_ID;
 
+// TODO it may be needed to obtain SAI_SWITCH_ATTR_DEFAULT_TRAP_GROUP object id
+
 // if we will not get response in 60 seconds when
 // notify syncd to compile new state or to switch
 // to compiled state, then there is something wrong
@@ -134,6 +136,7 @@ void clear_local_state()
     local_vlan_members_set.clear();
     local_vlans_set.clear();
     local_hostif_trap_groups_set.clear();
+    local_hostif_set.clear();
 
     // populate default objects
 
