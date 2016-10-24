@@ -1415,7 +1415,7 @@ sai_status_t meta_generic_validation_create(
                 {
                     SWSS_LOG_ERROR("object key %s already exists", key.c_str());
 
-                    return SAI_STATUS_INVALID_PARAMETER;
+                    return SAI_STATUS_ITEM_ALREADY_EXISTS;
                 }
 
                 break;
@@ -3371,7 +3371,7 @@ sai_status_t meta_sai_validate_fdb_entry(
         {
             SWSS_LOG_ERROR("object key %s already exists", key_fdb.c_str());
 
-            return SAI_STATUS_INVALID_PARAMETER;
+            return SAI_STATUS_ITEM_ALREADY_EXISTS;
         }
 
         return SAI_STATUS_SUCCESS;
@@ -3666,7 +3666,7 @@ sai_status_t meta_sai_validate_neighbor_entry(
         {
             SWSS_LOG_ERROR("object key %s already exists", key_neighbor.c_str());
 
-            return SAI_STATUS_INVALID_PARAMETER;
+            return SAI_STATUS_ITEM_ALREADY_EXISTS;
         }
 
         return SAI_STATUS_SUCCESS;
@@ -3908,7 +3908,7 @@ sai_status_t meta_sai_validate_vlan_id(
         {
             SWSS_LOG_ERROR("object key %s already exists", key_vlan.c_str());
 
-            return SAI_STATUS_INVALID_PARAMETER;
+            return SAI_STATUS_ITEM_ALREADY_EXISTS;
         }
 
         return SAI_STATUS_SUCCESS;
@@ -4218,7 +4218,7 @@ sai_status_t meta_sai_validate_route_entry(
         {
             SWSS_LOG_ERROR("object key %s already exists", key_route.c_str());
 
-            return SAI_STATUS_INVALID_PARAMETER;
+            return SAI_STATUS_ITEM_ALREADY_EXISTS;
         }
 
         return SAI_STATUS_SUCCESS;
