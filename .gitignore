@@ -13,6 +13,12 @@ debian/libsairedis.debhelper.log
 debian/libsairedis.postinst.debhelper
 debian/libsairedis.postrm.debhelper
 debian/libsairedis.substvars
+debian/libsaimetadata-dev.debhelper.log
+debian/libsaimetadata-dev.substvars
+debian/libsaimetadata.debhelper.log
+debian/libsaimetadata.postinst.debhelper
+debian/libsaimetadata.postrm.debhelper
+debian/libsaimetadata.substvars
 debian/libsaivs-dev.debhelper.log
 debian/libsaivs-dev.substvars
 debian/libsaivs.debhelper.log
@@ -27,6 +33,8 @@ debian/syncd.substvars
 
 debian/libsairedis-dev/
 debian/libsairedis/
+debian/libsaimetadata-dev/
+debian/libsaimetadata/
 debian/libsaivs-dev/
 debian/libsaivs/
 debian/syncd/
@@ -43,6 +51,7 @@ libtool
 Makefile.in
 stamp-h1
 **/.deps/
+**/.dirstamp
 **/.libs/
 **/Makefile
 m4
@@ -56,6 +65,8 @@ deps/
 ###############
 syncd/syncd
 syncd/syncd_request_shutdown
+player/player
+meta/tests
 
 # Temporary files #
 ###################
