@@ -5,6 +5,7 @@
 #include "swss/dbconnector.h"
 
 #include <algorithm>
+#include <list>
 
 /*
  * NOTE: All methods taking current and temporary view could be moved to
@@ -54,6 +55,23 @@ typedef enum _sai_object_status_t
     SAI_OBJECT_STATUS_FINAL,
 
 } sai_object_status_t;
+
+struct AsicOperation
+{
+    AsicOperation(int id, sai_object_id_t vID, bool remove,
+           std::shared_ptr<swss::KeyOpFieldsValuesTuple>& operation):
+        opId(id), vid(vID), isRemove(remove), op(operation)
+    {
+    }
+
+    int opId;
+
+    sai_object_id_t vid;
+
+    bool isRemove;
+
+    std::shared_ptr<swss::KeyOpFieldsValuesTuple> op;
+};
 
 /**
  * @brief Class represents single attribute
@@ -413,7 +431,8 @@ class AsicView
         /**
          * @brief Constructor
          */
-        AsicView()
+        AsicView():
+            m_asicOperationId(0)
         {
             /* empty intentionally */
         }
@@ -605,6 +624,11 @@ class AsicView
             SWSS_LOG_INFO("decreased vid %s refrence to %d",
                     sai_serialize_object_id(vid).c_str(),
                     referenceCount);
+
+            if (referenceCount == 0)
+            {
+                m_vidToAsicOperationId[vid] = m_asicOperationId;
+            }
         }
 
         /**
@@ -950,6 +974,8 @@ class AsicView
         {
             SWSS_LOG_ENTER();
 
+            m_asicOperationId++;
+
             /*
              * Release previous references if attribute is object id and bind
              * new reference in that place.
@@ -1002,7 +1028,9 @@ class AsicView
             std::shared_ptr<swss::KeyOpFieldsValuesTuple> kco =
                 std::make_shared<swss::KeyOpFieldsValuesTuple>(key, "set", entry);
 
-            m_asicOperations.push_back(kco);
+            sai_object_id_t vid = (currentObj->isOidObject()) ? currentObj->getVid() : SAI_NULL_OBJECT_ID;
+
+            m_asicOperations.push_back(AsicOperation(m_asicOperationId, vid, false, kco));
         }
 
         /**
@@ -1022,6 +1050,8 @@ class AsicView
                 _In_ const std::shared_ptr<SaiObj> &currentObj)
         {
             SWSS_LOG_ENTER();
+
+            m_asicOperationId++;
 
             if (currentObj->isOidObject())
             {
@@ -1112,7 +1142,9 @@ class AsicView
             std::shared_ptr<swss::KeyOpFieldsValuesTuple> kco =
                 std::make_shared<swss::KeyOpFieldsValuesTuple>(key, "create", entry);
 
-            m_asicOperations.push_back(kco);
+            sai_object_id_t vid = (currentObj->isOidObject()) ? currentObj->getVid() : SAI_NULL_OBJECT_ID;
+
+            m_asicOperations.push_back(AsicOperation(m_asicOperationId, vid, false, kco));
         }
 
         /**
@@ -1124,6 +1156,8 @@ class AsicView
                 _In_ const std::shared_ptr<SaiObj> &currentObj)
         {
             SWSS_LOG_ENTER();
+
+            m_asicOperationId++;
 
             if (currentObj->isOidObject())
             {
@@ -1209,9 +1243,11 @@ class AsicView
             std::shared_ptr<swss::KeyOpFieldsValuesTuple> kco =
                 std::make_shared<swss::KeyOpFieldsValuesTuple>(key, "remove", entry);
 
+            sai_object_id_t vid = (currentObj->isOidObject()) ? currentObj->getVid() : SAI_NULL_OBJECT_ID;
+
             if (currentObj->isOidObject())
             {
-                m_asicOperations.push_back(kco);
+                m_asicOperations.push_back(AsicOperation(m_asicOperationId, vid, true, kco));
             }
             else
             {
@@ -1226,11 +1262,105 @@ class AsicView
                  * will be removed first which maybe not allowed.
                  */
 
-                m_asicRemoveOperationsNonObjectId.push_back(kco);
+                m_asicRemoveOperationsNonObjectId.push_back(AsicOperation(m_asicOperationId, vid, true, kco));
             }
         }
 
-        std::vector<std::shared_ptr<swss::KeyOpFieldsValuesTuple>> asicGetOperations() const
+        std::list<AsicOperation> asicGetWithOptimizedRemoveOperations() const
+        {
+            SWSS_LOG_ENTER();
+
+            SWSS_LOG_TIMER("optimizing asic remove operations");
+
+            std::list<AsicOperation> list;
+
+            /*
+             * First push remove operations on non object id at the beginning of list.
+             */
+
+            for (const auto &n: m_asicRemoveOperationsNonObjectId)
+            {
+                list.push_back(n);
+            }
+
+            auto it = list.end();
+
+            for (auto opit = m_asicOperations.begin(); opit != m_asicOperations.end(); ++opit)
+            {
+                const auto &op = *opit;
+
+                if (!op.isRemove || op.vid == SAI_NULL_OBJECT_ID)
+                {
+                    /*
+                     * This is not remove operation or remove operation is on
+                     * non object id, so just put current op at the end();
+                     */
+
+                    SWSS_LOG_NOTICE("just some on 0x%lx op: %s", op.vid,
+                            sai_serialize_object_type(redis_sai_object_type_query(op.vid)).c_str());
+                    list.insert(list.end(), op);
+                    continue;
+                }
+
+                // remove vid object
+
+                auto mit = m_vidToAsicOperationId.find(op.vid);
+
+                if (mit == m_vidToAsicOperationId.end())
+                {
+                    /*
+                     * This vid is not present in map, so we can move remove
+                     * operation all the way to the top since there is no
+                     * operation that decreased this vid reference.
+                     *
+                     * Should this happen at all?
+                     */
+
+                    list.insert(it, op);
+                    it++;
+
+                    SWSS_LOG_NOTICE("move 0x%lx all way up (not in map): %s", op.vid,
+                            sai_serialize_object_type(redis_sai_object_type_query(op.vid)).c_str());
+                    continue;
+                }
+
+                /*
+                 * This last operation id that decreased VID reference to zero
+                 * can be before or after current iterator, so it may be not
+                 * found on list from curernt iterator to list end.  This will
+                 * mean that we can insert this remove at current iterator
+                 * position.
+                 *
+                 * If operation is found then we need to insert this op after
+                 * current iterator and forward iterator.
+                 *
+                 */
+
+                int lastOpIdDecRef = mit->second;
+
+                auto itr = find_if(it, list.end(), [lastOpIdDecRef] (const AsicOperation& ao) { return ao.opId == lastOpIdDecRef; } );
+
+                if (itr == list.end())
+                {
+                    list.insert(it, op);
+                    it++;
+
+                    SWSS_LOG_NOTICE("move 0x%lx all way up (in map): %s", op.vid,
+                            sai_serialize_object_type(redis_sai_object_type_query(op.vid)).c_str());
+                    continue;
+                }
+
+                it = itr;
+                list.insert(it, op);
+
+                SWSS_LOG_NOTICE("move 0x%lx in the middle up: %s", op.vid,
+                            sai_serialize_object_type(redis_sai_object_type_query(op.vid)).c_str());
+            }
+
+            return list;
+        }
+
+        std::vector<AsicOperation> asicGetOperations() const
         {
             SWSS_LOG_ENTER();
 
@@ -1253,7 +1383,7 @@ class AsicView
         {
             SWSS_LOG_ENTER();
 
-            return m_asicOperations.size() +  m_asicRemoveOperationsNonObjectId.size();
+            return m_asicOperations.size() + m_asicRemoveOperationsNonObjectId.size();
         }
 
         bool hasRid(
@@ -1276,6 +1406,36 @@ class AsicView
          * VID is key, reference count is value.
          */
         std::map<sai_object_id_t, int> m_vidReference;
+
+        /**
+         * @brief Asic operation ID.
+         *
+         * Since asic resources are limited like number of routes or buffer
+         * pools, so if we don't match object, at first we created new object
+         * and then remove previous one. This scenarion may not be possible in
+         * case of limited resources. Advantage here is that this approach is
+         * making sure that asic data plane disruption will be minimal. But we
+         * need to switch to remove object first and then create new one. This
+         * will make sure that we will be able to remove first and then create,
+         * but in this case we can have some asic data plane disruption.
+         *
+         * This asic operation id will be used to figure out what operation
+         * reduced object reference to zero, se we could move remove operation
+         * right after this operation instead of the executing all remove
+         * actions after all set/create.
+         *
+         */
+        int m_asicOperationId;
+
+        /**
+         * @brief VID to asic operation id map.
+         *
+         * Map where key is VID that opints to last asic operation id that
+         * decreased reference on that VID to zero. This mean that if object
+         * witht that VID will be removed, we can move remove operation right
+         * after asic operation id pointed by this VID.
+         */
+        std::map<sai_object_id_t, int> m_vidToAsicOperationId;
 
         void populateAttributes(
                 _In_ std::shared_ptr<SaiObj> &obj,
@@ -1340,8 +1500,8 @@ class AsicView
          * KeyOpFieldsValuesTuple is shared to prevent expensive copy when
          * adding to vector.
          */
-        std::vector<std::shared_ptr<swss::KeyOpFieldsValuesTuple>> m_asicOperations;
-        std::vector<std::shared_ptr<swss::KeyOpFieldsValuesTuple>> m_asicRemoveOperationsNonObjectId;
+        std::vector<AsicOperation> m_asicOperations;
+        std::vector<AsicOperation> m_asicRemoveOperationsNonObjectId;
 
         /*
          * Copy constructor and assignment operator are marked as private to
@@ -5577,7 +5737,8 @@ void executeOperationsOnAsic(
 
         SWSS_LOG_TIMER("asic apply");
 
-        for (const auto &op: currentView.asicGetOperations())
+        // for (const auto &op: currentView.asicGetOperations())
+        for (const auto &op: currentView.asicGetWithOptimizedRemoveOperations())
         {
             /*
              * It is possible that this method will throw exception in that case we
@@ -5587,7 +5748,7 @@ void executeOperationsOnAsic(
              * will lead to unexpected behaviour.
              */
 
-            sai_status_t status = asic_process_event(currentView, temporaryView, *op);
+            sai_status_t status = asic_process_event(currentView, temporaryView, *op.op);
 
             if (status != SAI_STATUS_SUCCESS)
             {
