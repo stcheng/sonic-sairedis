@@ -1338,10 +1338,19 @@ class AsicView
 
                 int lastOpIdDecRef = mit->second;
 
+                // TODO cos jest zle, chyba moze byc tak ze mozmy przesunac element na start ale za nim moze byc operacja
+                // ktora zwalania
+
                 auto itr = find_if(it, list.end(), [lastOpIdDecRef] (const AsicOperation& ao) { return ao.opId == lastOpIdDecRef; } );
 
                 if (itr == list.end())
                 {
+                    if (find_if(list.begin(), it, [lastOpIdDecRef] (const AsicOperation& ao) { return ao.opId == lastOpIdDecRef; } ) 
+                            == list.end())
+                    {
+                        SWSS_LOG_THROW("something wrong, vid in map, but not found on list!");
+                    }
+
                     list.insert(it, op);
                     it++;
 
@@ -1488,6 +1497,11 @@ class AsicView
                     sai_object_id_t vid = m->getoid(&currentObj->meta_key);
 
                     m_vidReference[vid] += value;
+
+                    if (m_vidReference[vid] == 0)
+                    {
+                        m_vidToAsicOperationId[vid] = m_asicOperationId;
+                    }
                 }
             }
         }
