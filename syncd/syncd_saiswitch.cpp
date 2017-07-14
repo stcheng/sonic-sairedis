@@ -559,8 +559,6 @@ void SaiSwitch::collectCounters(
         return;
     }
 
-    SWSS_LOG_TIMER("get counters");
-
     uint32_t countersSize = (uint32_t)m_supported_counters.size();
 
     std::vector<uint64_t> counters;

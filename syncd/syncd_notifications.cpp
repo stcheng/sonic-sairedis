@@ -327,6 +327,6 @@ void check_notifications_pointers(
          * Here we translated pointer, just log it.
          */
 
-        SWSS_LOG_NOTICE("%s: %lp (orch) => %lp (syncd)", meta->attridname, prev, attr.value.ptr);
+        SWSS_LOG_INFO("%s: %lp (orch) => %lp (syncd)", meta->attridname, prev, attr.value.ptr);
     }
 }

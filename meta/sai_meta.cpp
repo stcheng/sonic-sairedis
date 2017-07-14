@@ -4489,7 +4489,7 @@ void meta_sai_on_fdb_event_single(
 
             if (!object_exists(key_fdb))
             {
-                SWSS_LOG_WARN("object key %s don't exist but received AGED/FLUSHED event", key_fdb.c_str());
+                SWSS_LOG_WARN("object key %s doesn't exist but received AGED/FLUSHED event", key_fdb.c_str());
                 break;
             }
 
