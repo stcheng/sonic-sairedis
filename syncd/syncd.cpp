@@ -3665,8 +3665,8 @@ int syncd_main(int argc, char **argv)
 
         s->addSelectable(asicState.get());
         s->addSelectable(restartQuery.get());
-        s->addSelectable(flexCounter.get());
-        s->addSelectable(flexCounterGroup.get());
+        // s->addSelectable(flexCounter.get());
+        // s->addSelectable(flexCounterGroup.get());
 
         SWSS_LOG_NOTICE("starting main loop");
     }
